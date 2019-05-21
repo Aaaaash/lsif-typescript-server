@@ -1,5 +1,6 @@
-import { InitializeLSIFDataBaseArguments } from "../protocol";
-import { Logger } from "../logger";
+import { InitializeLSIFDataBaseArguments, Event, Request } from "../protocol";
+import logger, { Logger } from "../logger";
+import { register } from "../register";
 
 class InitializeHandler {
     constructor (
@@ -7,9 +8,11 @@ class InitializeHandler {
     ) {
     }
 
-    public handler(message: InitializeLSIFDataBaseArguments) {
+    public handler (message: InitializeLSIFDataBaseArguments) {
         // @TODO
     }
 }
 
-export default InitializeHandler;
+const initializer = new InitializeHandler(logger);
+
+register<InitializeLSIFDataBaseArguments>(Event.Request, Request.INITIALIZE, initializer.handler);

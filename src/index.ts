@@ -1,6 +1,8 @@
 import ws from "ws";
 
 import logger from "./logger";
+import { InitializeLSIFDataBaseRequest, InitializeLSIFDataBaseArguments } from "./protocol";
+import { requestMap, notificationMap } from "./register";
 
 const wss = new ws.Server({
     port: 8088,
@@ -29,13 +31,17 @@ wss.addListener("listening", () => {
 wss.on("connection", (websocket) => {
     websocket.addEventListener("message", (e) => {
         const { data } = e;
-        const rpcMessage = JSON.parse(data);
+        const rpcMessage: InitializeLSIFDataBaseRequest<InitializeLSIFDataBaseArguments> = JSON.parse(data);
         const { type } = rpcMessage;
         switch (type) {
             case "notification":
                 // @todo
             case "request":
-                // @todo
+                const handler = requestMap.get(rpcMessage.method);
+                if (handler) {
+                    const response = handler(rpcMessage.arguments);
+                    console.log(response);
+                }
             default:
                 logger.error(`Unknow message type: ${type}`);
         }

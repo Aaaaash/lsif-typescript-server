@@ -7,6 +7,7 @@ enum LogLevel {
     DEBUG,
 }
 
+process.env["LOG_LEVEL"] = String(LogLevel.DEBUG);
 export class Logger {
     private logLevel: LogLevel;
     constructor() {

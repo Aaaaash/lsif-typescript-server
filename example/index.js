@@ -2,7 +2,7 @@ const websocket = new WebSocket("ws://localhost:8088");
 
 websocket.onopen = () => {
     const msg = JSON.stringify({
-        type: "notification",
+        type: "request",
         method: "initialize",
         arguments: {
             projectName: "lsif-typescript-server",

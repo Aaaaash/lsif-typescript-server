@@ -1,4 +1,8 @@
 node_modules/
 
-*/.cache/
-*/dist/
+.cache/
+dist/
+
+yarn-error.log
+
+*.log

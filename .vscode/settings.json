@@ -1,3 +1,4 @@
 {
-    "workbench.tree.indent": 10
+    "workbench.tree.indent": 10,
+    "editor.tabSize": 2
 }

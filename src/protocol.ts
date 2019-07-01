@@ -5,9 +5,8 @@ export enum Event {
     Notification = "notification",
 }
 
-
 export enum Request {
-    INITIALIZE = "initialize",    
+    INITIALIZE = "initialize",
 }
 
 export enum Notification {

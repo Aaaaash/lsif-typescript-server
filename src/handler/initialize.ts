@@ -3,12 +3,13 @@ import logger, { Logger } from "../logger";
 import { register } from "../register";
 
 class InitializeHandler {
-    constructor (
+    constructor(
         private logger: Logger
     ) {
     }
 
-    public handler (message: InitializeLSIFDataBaseArguments) {
+    public handler(message: InitializeLSIFDataBaseArguments) {
+        logger.debug(JSON.stringify(message));
         // @TODO
     }
 }

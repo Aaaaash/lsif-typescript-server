@@ -4,6 +4,7 @@ websocket.onopen = () => {
     const msg = JSON.stringify({
         type: "request",
         method: "initialize",
+        id: 0,
         arguments: {
             projectName: "lsif-typescript-server",
             gitRepourl: "git@github.com/ash/github.git",

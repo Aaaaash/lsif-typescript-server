@@ -2,6 +2,7 @@ import { logger } from 'src/logger';
 import { WebSocketMessageReader } from './messageReader';
 import { WebSocketMessageWriter } from './messageWriter';
 import { Message, Event } from './protocol';
+import { LinkedMap } from './linkedMap';
 
 enum ConnectionState {
 	New = 1,
@@ -10,9 +11,26 @@ enum ConnectionState {
 	Disposed = 4
 }
 
+interface ResponsePromise {
+	method: string;
+	timerStart: number;
+	resolve: (response: any) => void;
+	reject: (error: any) => void
+}
+
 export class Connection {
 
   public state: ConnectionState = ConnectionState.New;
+
+  private responsePromises: { [method: string]: ResponsePromise } = Object.create(null);
+
+  private sequenceNumber: number = 0;
+
+  private messageQueue: LinkedMap<string, Message<any>> = new LinkedMap();
+
+  private requestHandlers: Map<string, (args: any) => void> = new Map();
+
+  private notificationHandlers: Map<string, (args: any) => void> = new Map();
 
   constructor(
     private messageReader: WebSocketMessageReader,
@@ -32,18 +50,83 @@ export class Connection {
     } else if (message.type === Event.Notification) {
       //
     }
+
+    this.addMessageToQueue(message);
+
+    this.triggerMessageQueue();
   }
 
-  public onRequest() {
+  private addMessageToQueue(message: Message<any>) {
+    if (message.type === Event.Response) {
+      this.messageQueue.set(`res-${String(message.id)}`, message);
+    } else if (message.type === Event.Request) {
+      this.messageQueue.set(`req-${String(message.id)}`, message);
+    } else {
+			this.messageQueue.set(`not-${String(message.id)}`, message);
+		}
+  }
+
+  private triggerMessageQueue() {
+    if(this.messageQueue.size === 0) {
+      return;
+    }
+
+    const message = this.messageQueue.shift();
+
+    if (message) {
+      if (message.type === Event.Request) {
+        this.handleRequest(message);
+      } else if (message.type === Event.Response) {
+        this.handleResponse(message);
+      } else {
+        this.handleNotification(message);
+        // notification
+      }
+    }
+  }
+
+  private handleRequest(message: Message<any>) {
+    const requestHandler = this.requestHandlers.get(message.method!);
+
+    if (requestHandler) {
+      const result = requestHandler(message);
+    }
+  }
+
+  private handleResponse(message: Message<any>) {
 
   }
 
-  public onNotification() {
-
+  private handleNotification(message: Message<any>) {
+    
   }
 
-  public sendRequest() {
+  public onRequest<T, R>(method: string, handler: (args: R) => void) {
+    this.requestHandlers.set(method, handler);
+  }
 
+  public onNotification<T, R>(notifyType: string, handler: (args: R) => void) {
+    this.notificationHandlers.set(notifyType, handler);
+  }
+
+  public sendRequest<R>(method: string, ...params: any[]) {
+    this.sequenceNumber += 1;
+    const id = this.sequenceNumber += 1;
+    return new Promise<R>((resolve, reject) => {
+      this.responsePromises[String(id)] = {
+        resolve,
+        reject,
+        method,
+        timerStart: Date.now(),
+      };
+
+      const requestMessage = {
+        id,
+        params,
+        method,
+      }
+      this.messageWriter.write(requestMessage);
+    });
   }
 
   public sendNotification() {

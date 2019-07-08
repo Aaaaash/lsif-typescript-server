@@ -25,7 +25,7 @@ wss.addListener("listening", () => {
     logger.log("Start websocket server in 8088.");
 });
 
-wss.on("connection", (websocket: any) => {
+wss.on("connection", (websocket: ws) => {
     websocket.addEventListener("message", (e: any) => {
         const { data } = e;
         const rpcMessage: InitializeLSIFDataBaseRequest<InitializeLSIFDataBaseArguments> = JSON.parse(data);

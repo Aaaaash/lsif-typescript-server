@@ -1,9 +1,7 @@
 import ws from "ws";
 
-import logger from "./logger";
-import { InitializeLSIFDataBaseRequest, InitializeLSIFDataBaseArguments, Event } from "./protocol";
-import { requestMap, notificationMap } from "./register";
-import "./handler/initialize";
+import { logger } from "./logger";
+import { Connection, WebSocketMessageReader, WebSocketMessageWriter } from './connection';
 
 const wss = new ws.Server({
     port: 8088,
@@ -26,23 +24,10 @@ wss.addListener("listening", () => {
 });
 
 wss.on("connection", (websocket: ws) => {
-    websocket.addEventListener("message", (e: any) => {
-        const { data } = e;
-        const rpcMessage: InitializeLSIFDataBaseRequest<InitializeLSIFDataBaseArguments> = JSON.parse(data);
-        const { type } = rpcMessage;
-        logger.debug(`[Event] - Receive ${type} ${rpcMessage.method}, arguments: ${JSON.stringify(rpcMessage.arguments)}`);
-        switch (type) {
-            case Event.Notification:
-                break;
-            case Event.Request:
-                const handler = requestMap.get(rpcMessage.method);
-                if (handler) {
-                    const response = handler(rpcMessage.arguments);
-                    console.log(response);
-                }
-                break;
-            default:
-                logger.error(`Unknow message type: ${type}`);
-        }
-    });
+    const messageReader = new WebSocketMessageReader(websocket);
+    const messageWriter = new WebSocketMessageWriter(websocket);
+    const connection = new Connection(messageReader, messageWriter);
+
+    connection.listen();
+
 });

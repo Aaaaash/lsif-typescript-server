@@ -1,6 +1,7 @@
-import { MessageReader } from './messageReader';
-import { MessageWriter } from './messageWriter';
-import { Message } from './protocol';
+import { logger } from 'src/logger';
+import { WebSocketMessageReader } from './messageReader';
+import { WebSocketMessageWriter } from './messageWriter';
+import { Message, Event } from './protocol';
 
 enum ConnectionState {
 	New = 1,
@@ -14,18 +15,23 @@ export class Connection {
   public state: ConnectionState = ConnectionState.New;
 
   constructor(
-    private messageReader: MessageReader,
-    private messageWriter: MessageWriter,
+    private messageReader: WebSocketMessageReader,
+    private messageWriter: WebSocketMessageWriter,
   ) {}
 
   public listen() {
+    logger.log('Start listen connection.');
     this.state = ConnectionState.Listening;
     this.messageReader.listen(this.messageCallback);
   }
 
-  private messageCallback(message: Message) {
-
-    // this.messageWriter.write(message);
+  private messageCallback(message: Message<any>) {
+    logger.debug(`[DEBUG]: Receive ${message.type}, method ${message.method}, arguments ${JSON.stringify(message.arguments)} `);
+    if (message.type === Event.Request) {
+      //
+    } else if (message.type === Event.Notification) {
+      //
+    }
   }
 
   public onRequest() {
@@ -50,7 +56,7 @@ export class Connection {
 }
 
 export {
-  MessageReader,
-  MessageWriter
+  WebSocketMessageReader,
+  WebSocketMessageWriter
 }
 

@@ -7,7 +7,7 @@ websocket.onopen = () => {
         id: 0,
         arguments: {
             projectName: "lsif-typescript-server",
-            gitRepourl: "git@github.com/ash/github.git",
+            url: "git@github.com:theia-ide/dugite-extra.git",
         }
     });
     websocket.send(msg);

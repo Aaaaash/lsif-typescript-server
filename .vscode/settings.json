@@ -1,4 +1,18 @@
 {
-    "workbench.tree.indent": 10,
-    "editor.tabSize": 4
+    "editor.autoIndent": false,
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript"
+    ],
+    "tslint.exclude": [
+        "./packages/**",
+        "./build/**",
+        "./scripts/**",
+        "./extensions/**/**"
+    ],
+    "javascript.format.insertSpaceAfterConstructor": true,
+    "javascript.preferences.quoteStyle": "single",
+    "prettier.tabWidth": 4,
+    "prettier.eslintIntegration": true
 }

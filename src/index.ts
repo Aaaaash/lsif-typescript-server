@@ -3,6 +3,7 @@ import ws from 'ws';
 import { logger } from './logger';
 import { Connection, WebSocketMessageReader, WebSocketMessageWriter } from './connection';
 import { InitializeRequest } from './connection/protocol';
+import initializeHandler from './handlers/initializeHandler';
 
 const wss = new ws.Server({
     port: 8088,
@@ -31,9 +32,5 @@ wss.on('connection', (websocket: ws) => {
 
     connection.listen();
 
-    connection.onRequest<InitializeRequest, Promise<string>>('initialize', async (message) => {
-        const { arguments: { projectName, gitRepoUrl } } = message;
-        logger.log(`[Initialize] - initalize project ${projectName}.`);
-        return 'initialized';
-    });
+    connection.onRequest<InitializeRequest, Promise<string>>('initialize', initializeHandler);
 });

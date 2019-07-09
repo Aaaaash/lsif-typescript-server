@@ -22,7 +22,7 @@ export interface Message<T> {
 
 export interface InitializeArguments {
     projectName: string;
-    gitRepoUrl: string;
+    url: string;
 };
 
 export type InitializeRequest = Message<InitializeArguments>;

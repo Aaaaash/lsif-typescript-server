@@ -1943,6 +1943,13 @@ lsif-protocol@0.3.1:
   dependencies:
     vscode-languageserver-protocol "^3.14.0"
 
+lsif-protocol@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.npm.taobao.org/lsif-protocol/download/lsif-protocol-0.4.2.tgz#69e7b3542855efd3d35e97bc911a96f4a0157eb6"
+  integrity sha1-aeezVChV79PTXpe8kRqW9KAVfrY=
+  dependencies:
+    vscode-languageserver-protocol "^3.14.1"
+
 lsif-tsc@^0.3.0:
   version "0.3.0"
   resolved "https://registry.npm.taobao.org/lsif-tsc/download/lsif-tsc-0.3.0.tgz#ceba1312fce6e1800c83a859681a6d5475bd5a15"
@@ -3654,7 +3661,7 @@ vscode-jsonrpc@^4.0.0:
   resolved "https://registry.npm.taobao.org/vscode-jsonrpc/download/vscode-jsonrpc-4.0.0.tgz#a7bf74ef3254d0a0c272fab15c82128e378b3be9"
   integrity sha1-p7907zJU0KDCcvqxXIISjjeLO+k=
 
-vscode-languageserver-protocol@^3.14.0:
+vscode-languageserver-protocol@^3.14.0, vscode-languageserver-protocol@^3.14.1:
   version "3.14.1"
   resolved "https://registry.npm.taobao.org/vscode-languageserver-protocol/download/vscode-languageserver-protocol-3.14.1.tgz#b8aab6afae2849c84a8983d39a1cf742417afe2f"
   integrity sha1-uKq2r64oSchKiYPTmhz3QkF6/i8=

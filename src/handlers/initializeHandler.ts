@@ -6,9 +6,42 @@ import { clone, git } from 'dugite-extra';
 
 import { ensureDirExist } from 'src/utils';
 import { InitializeRequest } from 'src/connection/protocol';
+import { jsonDatabase } from 'src/dataBase';
 import logger from 'src/logger';
 
-export default async function initializeHandler(args: InitializeRequest): Promise<string> {
+function initializeLSIFDump(fsPath: string, projectPath: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+        const executorFile = path.resolve(
+            process.cwd(),
+            'node_modules',
+            'lsif-tsc',
+            'bin',
+            'lsif-tsc'
+        );
+        const lsifArgs = [
+            '-p',
+            './tsconfig.json'
+        ];
+        logger.debug(`tsconfig file path: ${path.join(projectPath, 'tsconfig.json')}`);
+
+        const childProcess = cp.fork(executorFile, lsifArgs, { cwd: projectPath, silent: true });
+        const writeStream = fse.createWriteStream(fsPath);
+
+        if (childProcess.stdout) {
+            childProcess.stdout.pipe(writeStream);
+        }
+        
+        childProcess.addListener('error', (err) => {
+            logger.error(err.message);
+        });
+
+        writeStream.addListener('finish', () => {
+            resolve(true);
+        });
+    });
+}
+
+export default async function initializeHandler(args: InitializeRequest): Promise<boolean> {
     const { arguments: { projectName, url } } = args;
     const { owner, organization, name, href } = gitUrlParse(url);
 
@@ -28,41 +61,15 @@ export default async function initializeHandler(args: InitializeRequest): Promis
 
     let version;
     const versionResult = await git(['rev-parse', 'HEAD'], projectPath, '');
-    return new Promise((resolve) => {
-        if (versionResult.exitCode === 0) {
-            version = versionResult.stdout;
-            try {
-                const executorFile = path.resolve(
-                    process.cwd(),
-                    'node_modules',
-                    'lsif-tsc',
-                    'bin',
-                    'lsif-tsc'
-                );
-                const lsifArgs = [
-                    '-p',
-                    './tsconfig.json'
-                ];
-                logger.debug(`tsconfig file path: ${path.join(projectPath, 'tsconfig.json')}`);
-
-                const childProcess = cp.fork(executorFile, lsifArgs, { cwd: projectPath, silent: true });
-                const writeStream = fse.createWriteStream(path.join(dumpPath, version))
-
-                if (childProcess.stdout) {
-                    childProcess.stdout.pipe(writeStream);
-                }
-                
-                childProcess.addListener('error', (err) => {
-                    logger.error(err.message);
-                });
-
-                writeStream.addListener('finish', () => {
-                    resolve('Initialized');
-                });                
-            } catch(err) {
-                logger.error(err.message);
-            }
+    if (versionResult.exitCode === 0) {
+        version = versionResult.stdout;
+        const dumpFilePath = path.join(dumpPath, `${version}.lsif`);
+        const initialized = await initializeLSIFDump(dumpFilePath, projectPath);
+        if (initialized) {
+            await jsonDatabase.load(dumpFilePath);
+            return true;
         }
-    })
-
+        return false;
+    }
+    return false;
 }

@@ -32,5 +32,5 @@ wss.on('connection', (websocket: ws) => {
 
     connection.listen();
 
-    connection.onRequest<InitializeRequest, Promise<string>>('initialize', initializeHandler);
+    connection.onRequest<InitializeRequest, Promise<boolean>>('initialize', initializeHandler);
 });

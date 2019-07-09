@@ -19,3 +19,10 @@ export interface Message<T> {
   notifyType?: Notification;
   arguments: T;
 }
+
+export interface InitializeArguments {
+  projectName: string;
+  gitRepoUrl: string;
+};
+
+export type InitializeRequest = Message<InitializeArguments>;

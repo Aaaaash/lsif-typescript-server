@@ -38,12 +38,12 @@ export class Connection {
   ) {}
 
   public listen() {
-    logger.log('Start listen connection.');
+    logger.log('Connection initialize.');
     this.state = ConnectionState.Listening;
     this.messageReader.listen(this.messageCallback);
   }
 
-  private messageCallback(message: Message<any>) {
+  private messageCallback = (message: Message<any>) => {
     logger.debug(`[DEBUG]: Receive ${message.type}, method ${message.method}, arguments ${JSON.stringify(message.arguments)} `);
     if (message.type === Event.Request) {
       //
@@ -56,7 +56,7 @@ export class Connection {
     this.triggerMessageQueue();
   }
 
-  private addMessageToQueue(message: Message<any>) {
+  private addMessageToQueue = (message: Message<any>) => {
     if (message.type === Event.Response) {
       this.messageQueue.set(`res-${String(message.id)}`, message);
     } else if (message.type === Event.Request) {
@@ -80,7 +80,6 @@ export class Connection {
         this.handleResponse(message);
       } else {
         this.handleNotification(message);
-        // notification
       }
     }
   }
@@ -133,7 +132,7 @@ export class Connection {
 
   }
 
-  public  dispose() {
+  public dispose() {
 
   }
 }

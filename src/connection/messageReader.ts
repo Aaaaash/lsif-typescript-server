@@ -19,7 +19,6 @@ export class WebSocketMessageReader implements MessageReader {
   public listen(messageCallBack: (message: any) => void) {
     this.socket.addEventListener('message', (event) => {
       const { data } = event;
-      logger.debug(`[DEBUG]: Receive message ${data}`);
       try {
         const rpcMessage = JSON.parse(data);
         messageCallBack(rpcMessage);

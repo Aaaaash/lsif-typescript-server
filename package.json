@@ -25,6 +25,7 @@
   },
   "scripts": {
     "start": "node --require ts-node/register --require tsconfig-paths/register src/index.ts",
+    "compile": "tsc -p .",
     "lint": "./node_modules/.bin/eslint --ext .ts ./ --ignore-pattern ./.eslintignore",
     "lint:fix": "./node_modules/.bin/eslint --ext .ts ./ --ignore-pattern ./.eslintignore --fix"
   }

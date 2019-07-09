@@ -53,7 +53,7 @@ interface Out {
 }
 
 interface In {
-	contains: Map<Id, Project | Document>;
+    contains: Map<Id, Project | Document>;
 }
 
 class JsonDataBase {

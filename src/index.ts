@@ -31,8 +31,9 @@ wss.on('connection', (websocket: ws) => {
 
     connection.listen();
 
-    connection.onRequest<{}, InitializeRequest>('initialize', (message) => {
+    connection.onRequest<InitializeRequest, Promise<string>>('initialize', async (message) => {
         const { arguments: { projectName, gitRepoUrl } } = message;
         logger.log(`[Initialize] - initalize project ${projectName}.`);
+        return 'initialized';
     });
 });

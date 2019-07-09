@@ -1,7 +1,7 @@
 import ws from 'ws';
 
 export interface MessageWriter {
-    write(msg: RequestMessage): void;
+    write(msg: ResponseMessage | RequestMessage): void;
     dispose(): void;
 }
 
@@ -11,11 +11,17 @@ export interface RequestMessage {
     params: any;
 }
 
+export interface ResponseMessage {
+    id: number;
+    method: string;
+    result: any;
+}
+
 export class WebSocketMessageWriter implements MessageWriter {
 
     constructor(private socket: ws) {}
 
-    public write(message: RequestMessage): void {
+    public write(message: ResponseMessage | RequestMessage): void {
         const jsonData = JSON.stringify(message);
         this.socket.send(jsonData);
     }

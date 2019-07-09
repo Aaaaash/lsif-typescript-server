@@ -18,6 +18,13 @@ interface ResponsePromise {
     reject: (error: any) => void;
 }
 
+
+export type HandlerResult<R> = R | Promise<R>;
+
+export interface GenericRequestHandler<R> {
+    (...params: any[]): R | Promise<R>;
+}
+
 export class Connection {
 
     public state: ConnectionState = ConnectionState.New;
@@ -28,7 +35,7 @@ export class Connection {
 
     private messageQueue: LinkedMap<string, Message<any>> = new LinkedMap();
 
-    private requestHandlers: Map<string, (args: any) => void> = new Map();
+    private requestHandlers: Map<string, GenericRequestHandler<any>> = new Map();
 
     private notificationHandlers: Map<string, (args: any) => void> = new Map();
 
@@ -37,7 +44,7 @@ export class Connection {
         private messageWriter: WebSocketMessageWriter,
     ) {}
 
-    public listen() {
+    public listen(): void {
         logger.log('Connection initialize.');
         this.state = ConnectionState.Listening;
         this.messageReader.listen(this.messageCallback);
@@ -86,9 +93,21 @@ export class Connection {
 
     private handleRequest(message: Message<any>): void {
         const requestHandler = this.requestHandlers.get(message.method!);
-
         if (requestHandler) {
             const result = requestHandler(message);
+            if (result.then) {
+                result.then((data: any) => {
+                    console.log(data);
+                    const responseMessage = {
+                        id: message.id,
+                        method: message.method!,
+                        result: data,
+                    };
+                    this.messageWriter.write(responseMessage);
+                });
+            } else {
+                //
+            }
         }
     }
 
@@ -100,7 +119,7 @@ export class Connection {
     
     }
 
-    public onRequest<T, R>(method: string, handler: (args: R) => void): void {
+    public onRequest<T, R>(method: string, handler: (args: T) => R): void {
         this.requestHandlers.set(method, handler);
     }
 

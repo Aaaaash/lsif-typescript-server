@@ -1,4 +1,4 @@
-import ws from "ws";
+import ws from 'ws';
 
 import { logger } from './logger';
 import { Connection, WebSocketMessageReader, WebSocketMessageWriter } from './connection';
@@ -20,11 +20,11 @@ const wss = new ws.Server({
     }
 });
 
-wss.addListener("listening", () => {
-    logger.log("Start websocket server in 8088.");
+wss.addListener('listening', () => {
+    logger.log('Start websocket server in 8088.');
 });
 
-wss.on("connection", (websocket: ws) => {
+wss.on('connection', (websocket: ws) => {
     const messageReader = new WebSocketMessageReader(websocket);
     const messageWriter = new WebSocketMessageWriter(websocket);
     const connection = new Connection(messageReader, messageWriter);

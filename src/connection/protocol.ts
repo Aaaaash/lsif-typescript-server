@@ -1,11 +1,11 @@
 export enum Event {
-  Request = "request",
-  Notification = "notification",
-  Response = "response",
+    Request = 'request',
+    Notification = 'notification',
+    Response = 'response',
 }
 
 export enum Request {
-  INITIALIZE = "initialize",
+    INITIALIZE = 'initialize',
 }
 
 export enum Notification {
@@ -13,16 +13,16 @@ export enum Notification {
 }
 
 export interface Message<T> {
-  type: Event;
-  id: number;
-  method?: Request;
-  notifyType?: Notification;
-  arguments: T;
+    type: Event;
+    id: number;
+    method?: Request;
+    notifyType?: Notification;
+    arguments: T;
 }
 
 export interface InitializeArguments {
-  projectName: string;
-  gitRepoUrl: string;
+    projectName: string;
+    gitRepoUrl: string;
 };
 
 export type InitializeRequest = Message<InitializeArguments>;

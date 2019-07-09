@@ -4,29 +4,29 @@ import { Message } from './protocol';
 import { logger } from 'src/logger';
 
 export interface DataCallback {
-	(data: any): void;
+    (data: any): void;
 }
 
 export interface MessageReader {
-	listen(callback: DataCallback): void;
-	dispose(): void;
+    listen(callback: DataCallback): void;
+    dispose(): void;
 }
 
 export class WebSocketMessageReader implements MessageReader {
 
-  constructor(private socket: ws) {}
+    constructor(private socket: ws) {}
 
-  public listen(messageCallBack: (message: any) => void) {
-    this.socket.addEventListener('message', (event) => {
-      const { data } = event;
-      try {
-        const rpcMessage = JSON.parse(data);
-        messageCallBack(rpcMessage);
-      } catch(err) {
-        logger.error(`[ERROR]: ${err}`);
-      }
-    });
-  }
+    public listen(messageCallBack: (message: any) => void): void {
+        this.socket.addEventListener('message', (event) => {
+            const { data } = event;
+            try {
+                const rpcMessage = JSON.parse(data);
+                messageCallBack(rpcMessage);
+            } catch(err) {
+                logger.error(`[ERROR]: ${err}`);
+            }
+        });
+    }
 
-  public dispose() {}
+    public dispose() {}
 }

@@ -20,7 +20,8 @@ function initializeLSIFDump(fsPath: string, projectPath: string): Promise<boolea
         );
         const lsifArgs = [
             '-p',
-            './tsconfig.json'
+            './tsconfig.json',
+            '--stdout'
         ];
         logger.debug(`tsconfig file path: ${path.join(projectPath, 'tsconfig.json')}`);
 

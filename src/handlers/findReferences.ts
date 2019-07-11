@@ -7,6 +7,5 @@ export function findReferences(args: FindReferencesRequest): string {
         includeDeclaration: true,
     };
     const references = jsonDatabase.references(textDocument.uri, position, context);
-    console.log(JSON.stringify(references));
     return JSON.stringify(references);
 }

@@ -36,7 +36,7 @@ websocket.onopen = () => {
                     setTimeout(() => {
                         const findReferences = JSON.stringify({
                             type: 'request',
-                            method: 'findReferences',
+                            method: 'gotoDefinition',
                             id: 2,
                             arguments: {
                                 textDocument: {

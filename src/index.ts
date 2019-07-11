@@ -1,10 +1,9 @@
 import ws from 'ws';
-import * as lsp from 'vscode-languageserver';
 
 import { logger } from './logger';
 import { Connection, WebSocketMessageReader, WebSocketMessageWriter } from './connection';
-import { InitializeRequest, DocumentSymbolRequest, FindReferencesRequest } from './connection/protocol';
-import { documentSymbol, initialize, findReferences } from './handlers';
+import { InitializeRequest, DocumentSymbolRequest, FindReferencesRequest, GotoDefinitionRequest } from './connection/protocol';
+import { documentSymbol, initialize, findReferences, gotoDefinition } from './handlers';
 
 const wss = new ws.Server({
     port: 8088,
@@ -38,4 +37,6 @@ wss.on('connection', (websocket: ws) => {
     connection.onRequest<DocumentSymbolRequest, string>('documentSymbol', documentSymbol);
 
     connection.onRequest<FindReferencesRequest, string>('findReferences', findReferences);
+
+    connection.onRequest<GotoDefinitionRequest, string>('gotoDefinition', gotoDefinition);
 });

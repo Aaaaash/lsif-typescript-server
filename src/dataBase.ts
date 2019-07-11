@@ -407,7 +407,7 @@ class JsonDatabase {
             if (item.label !== VertexLabels.range) {
                 continue;
             }
-            console.log(item);
+
             if (JsonDatabase.containsPosition(item, position)) {
                 if (!candidate) {
                     candidate = item;
@@ -521,6 +521,35 @@ class JsonDatabase {
             return undefined;
         }
         return this.asReferenceResult(targets, context, new Set());
+    }
+
+    private asLocation(value: Range | lsp.Location): lsp.Location {
+        if (lsp.Location.is(value)) {
+            return value;
+        } else {
+            let document = this.in.contains.get(value.id)!;
+            return lsp.Location.create(this.uriTransformer!.fromDatabase((document as Document).uri), this.asRange(value));
+        }
+    }
+
+    public gotoDefinition(uri: string, position: lsp.Position): lsp.Location[] | undefined {
+        let range = this.findRangeFromPosition(this.toDatabase(uri), position);
+        if (range === undefined) {
+            return undefined;
+        }
+        let definitionResult: DefinitionResult | undefined = this.getResult(range, this.out.definition);
+        if (definitionResult === undefined) {
+            return undefined;
+        }
+        let ranges = this.item(definitionResult);
+        if (ranges === undefined) {
+            return undefined;
+        }
+        let result: lsp.Location[] = [];
+        for (let element of ranges) {
+            result.push(this.asLocation(element));
+        }
+        return result;
     }
 }
 

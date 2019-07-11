@@ -35,7 +35,7 @@ export interface DocumentSymbolArguments {
     textDocument: TextDocumentInentifier;
 }
 
-export interface FindReferencesArguments {
+export interface TextDocumentPositionArguments {
     textDocument: TextDocumentInentifier;
     position: lsp.Position;
 }
@@ -44,4 +44,6 @@ export type InitializeRequest = Message<InitializeArguments>;
 
 export type DocumentSymbolRequest = Message<DocumentSymbolArguments>;
 
-export type FindReferencesRequest = Message<FindReferencesArguments>;
+export type FindReferencesRequest = Message<TextDocumentPositionArguments>;
+
+export type GotoDefinitionRequest = Message<TextDocumentPositionArguments>;

@@ -47,3 +47,5 @@ export type DocumentSymbolRequest = Message<DocumentSymbolArguments>;
 export type FindReferencesRequest = Message<TextDocumentPositionArguments>;
 
 export type GotoDefinitionRequest = Message<TextDocumentPositionArguments>;
+
+export type HoverRequest = Message<TextDocumentPositionArguments>;

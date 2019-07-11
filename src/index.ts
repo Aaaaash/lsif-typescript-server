@@ -2,8 +2,8 @@ import ws from 'ws';
 
 import { logger } from './logger';
 import { Connection, WebSocketMessageReader, WebSocketMessageWriter } from './connection';
-import { InitializeRequest, DocumentSymbolRequest, FindReferencesRequest, GotoDefinitionRequest } from './connection/protocol';
-import { documentSymbol, initialize, findReferences, gotoDefinition } from './handlers';
+import { InitializeRequest, DocumentSymbolRequest, FindReferencesRequest, GotoDefinitionRequest, HoverRequest } from './connection/protocol';
+import { documentSymbol, initialize, findReferences, gotoDefinition, hover } from './handlers';
 
 const wss = new ws.Server({
     port: 8088,
@@ -39,4 +39,6 @@ wss.on('connection', (websocket: ws) => {
     connection.onRequest<FindReferencesRequest, string>('findReferences', findReferences);
 
     connection.onRequest<GotoDefinitionRequest, string>('gotoDefinition', gotoDefinition);
+
+    connection.onRequest<HoverRequest, string>('hover', hover);
 });

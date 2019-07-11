@@ -553,22 +553,22 @@ class JsonDatabase {
     }
 
     public hover(uri: string, position: lsp.Position): lsp.Hover | undefined {
-		let range = this.findRangeFromPosition(this.toDatabase(uri), position);
-		if (range === undefined) {
-			return undefined;
-		}
+        let range = this.findRangeFromPosition(this.toDatabase(uri), position);
+        if (range === undefined) {
+            return undefined;
+        }
 
-		let hoverResult: HoverResult | undefined = this.getResult(range, this.out.hover);
-		if (hoverResult === undefined) {
-			return undefined;
-		}
+        let hoverResult: HoverResult | undefined = this.getResult(range, this.out.hover);
+        if (hoverResult === undefined) {
+            return undefined;
+        }
 
-		let hoverRange = hoverResult.result.range !== undefined ? hoverResult.result.range : range;
-		return {
-			contents: hoverResult.result.contents,
-			range: hoverRange
-		};
-	}
+        let hoverRange = hoverResult.result.range !== undefined ? hoverResult.result.range : range;
+        return {
+            contents: hoverResult.result.contents,
+            range: hoverRange
+        };
+    }
 }
 
 export const jsonDatabase = new JsonDatabase();

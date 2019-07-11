@@ -1,4 +1,5 @@
-import { Id,
+import {
+    Id,
     Vertex,
     Document,
     Range,
@@ -14,9 +15,19 @@ import { Id,
     ImplementationResult,
     DeclarationResult,
     DiagnosticResult,
-    DocumentLinkResult
+    DocumentLinkResult,
+    Edge,
+    ElementTypes,
+    VertexLabels,
+    EdgeLabels,
 } from 'lsif-protocol';
+import { URI } from 'vscode-uri';
+import * as SemVer from 'semver';
+import * as fs from 'fs';
+import * as readline from 'readline';
+
 import logger from './logger';
+import { FileSystem } from './fileSystem';
 
 interface Vertices {
     all: Map<Id, Vertex>;
@@ -26,14 +37,24 @@ interface Vertices {
 }
 
 type ItemTarget =
-	Range |
-	{ type: ItemEdgeProperties.declarations; range: Range } |
-	{ type: ItemEdgeProperties.definitions; range: Range } |
-	{ type: ItemEdgeProperties.references; range: Range } |
-	{ type: ItemEdgeProperties.referenceResults; result: ReferenceResult };
+    Range |
+    { type: ItemEdgeProperties.declarations; range: Range } |
+    { type: ItemEdgeProperties.definitions; range: Range } |
+    { type: ItemEdgeProperties.references; range: Range } |
+    { type: ItemEdgeProperties.referenceResults; result: ReferenceResult };
 
 interface Indices {
     documents: Map<string, Document>;
+}
+
+export interface UriTransformer {
+    toDatabase(uri: string): string;
+    fromDatabase(uri: string): string;
+}
+
+export const noopTransformer: UriTransformer = {
+    toDatabase: uri => uri,
+    fromDatabase: uri => uri
 }
 
 interface Out {
@@ -56,7 +77,16 @@ interface In {
     contains: Map<Id, Project | Document>;
 }
 
+export interface DocumentInfo {
+    id: Id;
+    uri: string;
+}
+
 class JsonDataBase {
+
+    private version: string | undefined;
+
+    private projectRoot!: URI;
 
     private vertices: Vertices;
 
@@ -65,6 +95,10 @@ class JsonDataBase {
     private out: Out;
 
     private in: In;
+
+    private uriTransformer: UriTransformer | undefined;
+
+    private fileSystem: FileSystem | undefined;
 
     constructor() {
         this.vertices = {
@@ -99,8 +133,193 @@ class JsonDataBase {
         }
     }
 
-    public load(fsPath: string): void {
+    protected initialize(): void {
+        const projectRoot = this.getProjectRoot().toString(true);
+        this.uriTransformer = noopTransformer;
+        this.fileSystem = new FileSystem(projectRoot, this.getDocumentInfos());
+    }
+
+    public getProjectRoot(): URI {
+        return this.projectRoot;
+    }
+
+    public getDocumentInfos(): DocumentInfo[] {
+        let result: DocumentInfo[] = [];
+        this.vertices.documents.forEach((document, key) => {
+            result.push({ uri: document.uri, id: key });
+        });
+        return result;
+    }
+
+    private processVertex(vertex: Vertex): void {
+        this.vertices.all.set(vertex.id, vertex);
+        switch (vertex.label) {
+            case VertexLabels.metaData:
+                this.version = vertex.version;
+                if (vertex.projectRoot !== undefined) {
+                    this.projectRoot = URI.parse(vertex.projectRoot);
+                }
+                break;
+            case VertexLabels.project:
+                this.vertices.projects.set(vertex.id, vertex);
+                break;
+            case VertexLabels.document:
+                this.vertices.documents.set(vertex.id, vertex);
+                this.indices.documents.set(vertex.uri, vertex);
+                break;
+            case VertexLabels.range:
+                this.vertices.ranges.set(vertex.id, vertex);
+                break;
+        }
+    }
+
+    private doProcessEdge(label: EdgeLabels, outV: Id, inV: Id, property?: ItemEdgeProperties): void {
+        let from: Vertex | undefined = this.vertices.all.get(outV);
+        let to: Vertex | undefined = this.vertices.all.get(inV);
+        if (from === undefined) {
+            throw new Error(`No vertex found for Id ${outV}`);
+        }
+        if (to === undefined) {
+            throw new Error(`No vertex found for Id ${inV}`);
+        }
+        let values: any[] | undefined;
+        switch (label) {
+            case EdgeLabels.contains:
+                values = this.out.contains.get(from.id);
+                if (values === undefined) {
+                    values = [to as any];
+                    this.out.contains.set(from.id, values);
+                } else {
+                    values.push(to);
+                }
+                this.in.contains.set(to.id, from as any);
+                break;
+            case EdgeLabels.item:
+                values = this.out.item.get(from.id);
+                let itemTarget: ItemTarget | undefined;
+                if (property !== undefined) {
+                    switch (property) {
+                        case ItemEdgeProperties.references:
+                            itemTarget = { type: property, range: to as Range };
+                            break;
+                        case ItemEdgeProperties.declarations:
+                            itemTarget = { type: property, range: to as Range };
+                            break;
+                        case ItemEdgeProperties.definitions:
+                            itemTarget = { type: property, range: to as Range };
+                            break;
+                        case ItemEdgeProperties.referenceResults:
+                            itemTarget = { type: property, result: to as ReferenceResult };
+                            break;
+                    }
+                } else {
+                    itemTarget = to as Range;
+                }
+                if (itemTarget !== undefined) {
+                    if (values === undefined) {
+                        values = [itemTarget];
+                        this.out.item.set(from.id, values);
+                    } else {
+                        values.push(itemTarget);
+                    }
+                }
+                break;
+            case EdgeLabels.next:
+                this.out.next.set(from.id, to as ResultSet);
+                break;
+            case EdgeLabels.textDocument_documentSymbol:
+                this.out.documentSymbol.set(from.id, to as DocumentSymbolResult);
+                break;
+            case EdgeLabels.textDocument_foldingRange:
+                this.out.foldingRange.set(from.id, to as FoldingRangeResult);
+                break;
+            case EdgeLabels.textDocument_documentLink:
+                this.out.documentLink.set(from.id, to as DocumentLinkResult);
+                break;
+            case EdgeLabels.textDocument_diagnostic:
+                this.out.diagnostic.set(from.id, to as DiagnosticResult);
+                break;
+            case EdgeLabels.textDocument_definition:
+                this.out.definition.set(from.id, to as DefinitionResult);
+                break;
+            case EdgeLabels.textDocument_typeDefinition:
+                this.out.typeDefinition.set(from.id, to as TypeDefinitionResult);
+                break;
+            case EdgeLabels.textDocument_hover:
+                this.out.hover.set(from.id, to as HoverResult);
+                break;
+            case EdgeLabels.textDocument_references:
+                this.out.references.set(from.id, to as ReferenceResult);
+                break;
+        }
+    }
+
+    private processEdge(edge: Edge): void {
+        let property: ItemEdgeProperties | undefined;
+        if (edge.label === 'item') {
+            property = edge.property;
+        }
+        if (Edge.is11(edge)) {
+            this.doProcessEdge(edge.label, edge.outV, edge.inV, property);
+        } else if (Edge.is1N(edge)) {
+            for (let inV of edge.inVs) {
+                this.doProcessEdge(edge.label, edge.outV, inV, property);
+            }
+        }
+    }
+
+    public load(fsPath: string): Promise<void> {
         logger.debug(`Dump file path: ${fsPath}`);
+        return new Promise<void>((resolve, reject) => {
+            const input = fs.createReadStream(fsPath);
+            const rdInterface = readline.createInterface(input);
+
+            rdInterface.addListener('line', (chunk: string) => {
+                if (!chunk || chunk.length === 0) {
+                    return;
+                }
+
+                const element: Edge | Vertex = JSON.parse(chunk);
+                switch (element.type) {
+                    case ElementTypes.vertex:
+                        this.processVertex(element);
+                        break;
+                    case ElementTypes.edge:
+                        this.processEdge(element);
+                        break;
+                }
+            });
+
+            rdInterface.addListener('close', () => {
+                if (!this.projectRoot) {
+                    reject(new Error('No project root provided.'));
+                    return;
+                }
+
+                if (!this.version) {
+                    reject(new Error('No version found.'));
+                    return;
+                } else {
+                    const semver = SemVer.parse(this.version);
+                    if (!semver) {
+                        reject(new Error(`No valid semantic version string. The version is: ${this.version}`));
+                        return;
+                    }
+
+                    const range: SemVer.Range = new SemVer.Range('>=0.4.0<0.5.0');
+                    range.includePrerelease = true;
+
+                    if (!SemVer.satisfies(semver, range)) {
+                        reject(new Error(`Requires version 0.4.1 but received: ${this.version}`));
+                        return;
+                    }
+                }
+
+                resolve();
+            }).then(() => {
+                this.initialize(transformerFactory);
+            });
+        });
         // load lsif file
     }
 }

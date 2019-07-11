@@ -8,6 +8,7 @@
     "@types/fs-extra": "^8.0.0",
     "@types/git-url-parse": "^9.0.0",
     "@types/node": "^12.0.0",
+    "@types/semver": "^6.0.1",
     "@types/sqlite3": "^3.1.5",
     "@types/ws": "^6.0.1",
     "chalk": "^2.4.2",
@@ -17,7 +18,9 @@
     "git-url-parse": "^11.1.2",
     "lsif-protocol": "^0.4.2",
     "lsif-tsc": "^0.3.0",
+    "semver": "^6.2.0",
     "sqlite3": "^4.0.8",
+    "vscode-uri": "^2.0.3",
     "ws": "^7.0.0"
   },
   "devDependencies": {

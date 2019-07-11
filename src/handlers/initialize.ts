@@ -41,7 +41,7 @@ function initializeLSIFDump(fsPath: string, projectPath: string): Promise<boolea
     });
 }
 
-export default async function initializeHandler(args: InitializeRequest): Promise<boolean> {
+export async function initialize(args: InitializeRequest): Promise<boolean> {
     const { arguments: { projectName, url } } = args;
     const { owner, organization, name, href } = gitUrlParse(url);
 

@@ -42,7 +42,7 @@ export class Connection {
     constructor(
         private messageReader: WebSocketMessageReader,
         private messageWriter: WebSocketMessageWriter,
-    ) {}
+    ) { }
 
     public listen(): void {
         logger.log('Connection initialize.');
@@ -74,7 +74,7 @@ export class Connection {
     }
 
     private triggerMessageQueue(): void {
-        if(this.messageQueue.size === 0) {
+        if (this.messageQueue.size === 0) {
             return;
         }
 
@@ -106,7 +106,13 @@ export class Connection {
                     this.messageWriter.write(responseMessage);
                 });
             } else {
-                //
+                const responseMessage = {
+                    result,
+                    id: message.id,
+                    method: message.method!,
+                };
+
+                this.messageWriter.write(responseMessage);
             }
         }
     }
@@ -116,7 +122,7 @@ export class Connection {
     }
 
     private handleNotification(message: Message<any>): void {
-    
+
     }
 
     public onRequest<T, R>(method: string, handler: (args: T) => R): void {

@@ -133,7 +133,7 @@ class JsonDataBase {
         }
     }
 
-    protected initialize(): void {
+    protected initialize = (): void => {
         const projectRoot = this.getProjectRoot().toString(true);
         this.uriTransformer = noopTransformer;
         this.fileSystem = new FileSystem(projectRoot, this.getDocumentInfos());
@@ -306,21 +306,19 @@ class JsonDataBase {
                         return;
                     }
 
-                    const range: SemVer.Range = new SemVer.Range('>=0.4.0<0.5.0');
+                    const range: SemVer.Range = new SemVer.Range('>=0.3.1 <0.5.0');
                     range.includePrerelease = true;
 
                     if (!SemVer.satisfies(semver, range)) {
-                        reject(new Error(`Requires version 0.4.1 but received: ${this.version}`));
+                        reject(new Error(`Requires version 0.3.1 but received: ${this.version}`));
                         return;
                     }
                 }
 
                 resolve();
-            }).then(() => {
-                this.initialize(transformerFactory);
-            });
-        });
-        // load lsif file
+            })
+        })
+            .then(this.initialize);
     }
 }
 

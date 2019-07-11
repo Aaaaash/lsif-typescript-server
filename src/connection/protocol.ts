@@ -25,4 +25,10 @@ export interface InitializeArguments {
     url: string;
 };
 
+export interface DocumentSymbolArguments {
+    textDocument: { uri: string };
+}
+
 export type InitializeRequest = Message<InitializeArguments>;
+
+export type DocumentSymbolRequest = Message<DocumentSymbolArguments>;

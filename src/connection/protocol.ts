@@ -1,3 +1,5 @@
+import { lsp } from 'lsif-protocol';
+
 export enum Event {
     Request = 'request',
     Notification = 'notification',
@@ -25,10 +27,21 @@ export interface InitializeArguments {
     url: string;
 };
 
+interface TextDocumentInentifier {
+    uri: string;
+}
+
 export interface DocumentSymbolArguments {
-    textDocument: { uri: string };
+    textDocument: TextDocumentInentifier;
+}
+
+export interface FindReferencesArguments {
+    textDocument: TextDocumentInentifier;
+    position: lsp.Position;
 }
 
 export type InitializeRequest = Message<InitializeArguments>;
 
 export type DocumentSymbolRequest = Message<DocumentSymbolArguments>;
+
+export type FindReferencesRequest = Message<FindReferencesArguments>;

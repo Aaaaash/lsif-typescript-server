@@ -1,9 +1,11 @@
 import ws from 'ws';
+import * as lsp from 'vscode-languageserver';
 
 import { logger } from './logger';
 import { Connection, WebSocketMessageReader, WebSocketMessageWriter } from './connection';
-import { InitializeRequest } from './connection/protocol';
-import { documentSymbol, initialize } from './handlers';
+import { InitializeRequest, DocumentSymbolRequest, FindReferencesRequest } from './connection/protocol';
+import { documentSymbol, initialize, findReferences } from './handlers';
+
 const wss = new ws.Server({
     port: 8088,
     perMessageDeflate: {
@@ -33,5 +35,7 @@ wss.on('connection', (websocket: ws) => {
 
     connection.onRequest<InitializeRequest, Promise<boolean>>('initialize', initialize);
 
-    connection.onRequest('documentSymbol', documentSymbol);
+    connection.onRequest<DocumentSymbolRequest, string>('documentSymbol', documentSymbol);
+
+    connection.onRequest<FindReferencesRequest, string>('findReferences', findReferences);
 });

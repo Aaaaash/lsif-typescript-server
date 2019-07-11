@@ -20,7 +20,9 @@ import {
     ElementTypes,
     VertexLabels,
     EdgeLabels,
+    RangeBasedDocumentSymbol,
 } from 'lsif-protocol';
+import * as lsp from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import * as SemVer from 'semver';
 import * as fs from 'fs';
@@ -53,7 +55,7 @@ export interface UriTransformer {
 }
 
 export const noopTransformer: UriTransformer = {
-    toDatabase: uri => uri,
+    toDatabase: uri => URI.file(uri).toString(),
     fromDatabase: uri => uri
 }
 
@@ -82,7 +84,7 @@ export interface DocumentInfo {
     uri: string;
 }
 
-class JsonDataBase {
+class JsonDatabase {
 
     private version: string | undefined;
 
@@ -138,6 +140,53 @@ class JsonDataBase {
         this.uriTransformer = noopTransformer;
         this.fileSystem = new FileSystem(projectRoot, this.getDocumentInfos());
     }
+
+    protected toDatabase(uri: string): string {
+        return this.uriTransformer!.toDatabase(uri);
+    }
+
+    private static containsPosition(range: lsp.Range, position: lsp.Position): boolean {
+        if (position.line < range.start.line || position.line > range.end.line) {
+            return false;
+        }
+        if (position.line === range.start.line && position.character < range.start.character) {
+            return false;
+        }
+        if (position.line === range.end.line && position.character > range.end.character) {
+            return false;
+        }
+        return true;
+    }
+
+    public static containsRange(range: lsp.Range, otherRange: lsp.Range): boolean {
+        if (otherRange.start.line < range.start.line || otherRange.end.line < range.start.line) {
+            return false;
+        }
+        if (otherRange.start.line > range.end.line || otherRange.end.line > range.end.line) {
+            return false;
+        }
+        if (otherRange.start.line === range.start.line && otherRange.start.character < range.start.character) {
+            return false;
+        }
+        if (otherRange.end.line === range.end.line && otherRange.end.character > range.end.character) {
+            return false;
+        }
+        return true;
+    }
+
+    protected asRange(value: Range): lsp.Range {
+        return {
+            start: {
+                line: value.start.line,
+                character: value.start.character
+            },
+            end: {
+                line: value.end.line,
+                character: value.end.character
+            }
+        };
+    }
+
 
     public getProjectRoot(): URI {
         return this.projectRoot;
@@ -320,6 +369,159 @@ class JsonDataBase {
         })
             .then(this.initialize);
     }
+
+    private toDocumentSymbol(value: RangeBasedDocumentSymbol): lsp.DocumentSymbol | undefined {
+        let range = this.vertices.ranges.get(value.id)!;
+        let tag = range.tag;
+        if (tag === undefined || !(tag.type === 'declaration' || tag.type === 'definition')) {
+            return undefined;
+        }
+        let result: lsp.DocumentSymbol = lsp.DocumentSymbol.create(
+            tag.text, tag.detail || '', tag.kind,
+            tag.fullRange, this.asRange(range)
+        )
+        if (value.children && value.children.length > 0) {
+            result.children = [];
+            for (let child of value.children) {
+                let converted = this.toDocumentSymbol(child);
+                if (converted !== undefined) {
+                    result.children.push(converted);
+                }
+            }
+        }
+        return result;
+    }
+
+    private findRangeFromPosition(file: string, position: lsp.Position): Range | undefined {
+        let document = this.indices.documents.get(file);
+        if (document === undefined) {
+            return undefined;
+        }
+        let contains = this.out.contains.get(document.id);
+        if (contains === undefined || contains.length === 0) {
+            return undefined;
+        }
+
+        let candidate: Range | undefined;
+        for (let item of contains) {
+            if (item.label !== VertexLabels.range) {
+                continue;
+            }
+            console.log(item);
+            if (JsonDatabase.containsPosition(item, position)) {
+                if (!candidate) {
+                    candidate = item;
+                } else {
+                    if (JsonDatabase.containsRange(candidate, item)) {
+                        candidate = item;
+                    }
+                }
+            }
+        }
+
+        return candidate;
+    }
+
+    public documentSymbols(uri: string): lsp.DocumentSymbol[] | undefined {
+        const document = this.indices.documents.get(this.toDatabase(uri));
+        if (document === undefined) {
+            return undefined;
+        }
+        let documentSymbolResult = this.out.documentSymbol.get(document.id);
+        if (documentSymbolResult === undefined || documentSymbolResult.result.length === 0) {
+            return undefined;
+        }
+        let first = documentSymbolResult.result[0];
+        let result: lsp.DocumentSymbol[] = [];
+        if (lsp.DocumentSymbol.is(first)) {
+            for (let item of documentSymbolResult.result) {
+                result.push(Object.assign(Object.create(null), item));
+            }
+        } else {
+            for (let item of (documentSymbolResult.result as RangeBasedDocumentSymbol[])) {
+                let converted = this.toDocumentSymbol(item);
+                if (converted !== undefined) {
+                    result.push(converted);
+                }
+            }
+        }
+        return result;
+    }
+
+    private getResult<T>(range: Range, edges: Map<Id, T>): T | undefined {
+        let id: Id | undefined = range.id;
+        do {
+            let result: T | undefined = edges.get(id);
+            if (result !== undefined) {
+                return result;
+            }
+            let next = this.out.next.get(id);
+            id = next !== undefined ? next.id : undefined;
+        } while (id !== undefined);
+        return undefined;
+    }
+
+    private item(value: DeclarationResult): Range[];
+    private item(value: DefinitionResult): Range[];
+    private item(value: ReferenceResult): ItemTarget[];
+    private item(value: DeclarationResult | DefinitionResult | ReferenceResult): Range[] | ItemTarget[] | undefined {
+        if (value.label === 'declarationResult') {
+            return this.out.item.get(value.id) as Range[];
+        } else if (value.label === 'definitionResult') {
+            return this.out.item.get(value.id) as Range[];
+        } else if (value.label === 'referenceResult') {
+            return this.out.item.get(value.id) as ItemTarget[];
+        } else {
+            return undefined;
+        }
+    }
+
+    private asReferenceResult(targets: ItemTarget[], context: lsp.ReferenceContext, dedup: Set<Id>): lsp.Location[] {
+        let result: lsp.Location[] = [];
+        for (let target of targets) {
+            if (target.type === ItemEdgeProperties.declarations && context.includeDeclaration) {
+                this.addLocation(result, target.range, dedup);
+            } else if (target.type === ItemEdgeProperties.definitions && context.includeDeclaration) {
+                this.addLocation(result, target.range, dedup);
+            } else if (target.type === ItemEdgeProperties.references) {
+                this.addLocation(result, target.range, dedup);
+            } else if (target.type === ItemEdgeProperties.referenceResults) {
+                result.push(...this.asReferenceResult(this.item(target.result), context, dedup));
+            }
+        }
+        return result;
+    }
+
+    private addLocation(result: lsp.Location[], value: Range | lsp.Location, dedup: Set<Id>): void {
+        if (lsp.Location.is(value)) {
+            result.push(value);
+        } else {
+            if (dedup.has(value.id)) {
+                return;
+            }
+            let document = this.in.contains.get(value.id)!;
+            result.push(lsp.Location.create(this.uriTransformer!.fromDatabase((document as Document).uri), this.asRange(value)));
+            dedup.add(value.id);
+        }
+    }
+
+    public references(uri: string, position: lsp.Position, context: lsp.ReferenceContext): lsp.Location[] | undefined {
+        let range = this.findRangeFromPosition(this.toDatabase(uri), position);
+        if (range === undefined) {
+            return undefined;
+        }
+
+        let referenceResult: ReferenceResult | undefined = this.getResult(range, this.out.references);
+        if (referenceResult === undefined) {
+            return undefined;
+        }
+
+        let targets = this.item(referenceResult);
+        if (targets === undefined) {
+            return undefined;
+        }
+        return this.asReferenceResult(targets, context, new Set());
+    }
 }
 
-export const jsonDatabase = new JsonDataBase();
+export const jsonDatabase = new JsonDatabase();

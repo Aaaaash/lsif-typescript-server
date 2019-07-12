@@ -25,6 +25,7 @@ export interface Message<T> {
 export interface InitializeArguments {
     projectName: string;
     url: string;
+    commit?: string;
 };
 
 interface TextDocumentInentifier {

@@ -9,8 +9,12 @@ import { InitializeRequest } from 'src/connection/protocol';
 import { jsonDatabase } from 'src/dataBase';
 import logger from 'src/logger';
 
-function initializeLSIFDump(fsPath: string, projectPath: string, tsconfigPath: string): Promise<boolean> {
+function generateLSIFDumpFile(dumpFilePath: string, projectPath: string, tsconfigPath: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
+        if (fse.existsSync(dumpFilePath)) {
+            resolve(true);
+        }
+
         const executorFile = path.resolve(
             process.cwd(),
             'node_modules',
@@ -26,14 +30,15 @@ function initializeLSIFDump(fsPath: string, projectPath: string, tsconfigPath: s
         logger.log(`tsconfig path ${tsconfigPath}`);
 
         const childProcess = cp.fork(executorFile, lsifArgs, { cwd: projectPath, silent: true });
-        const writeStream = fse.createWriteStream(fsPath);
+        const writeStream = fse.createWriteStream(dumpFilePath);
 
         if (childProcess.stdout) {
             childProcess.stdout.pipe(writeStream);
         }
-        
+
         childProcess.addListener('error', (err) => {
             logger.error(err.message);
+            reject(err.message);
         });
 
         writeStream.addListener('finish', () => {
@@ -43,8 +48,8 @@ function initializeLSIFDump(fsPath: string, projectPath: string, tsconfigPath: s
 }
 
 export async function initialize(args: InitializeRequest): Promise<boolean> {
-    const { arguments: { projectName, url } } = args;
-    const { owner, organization, name, href } = gitUrlParse(url);
+    const { arguments: { url, commit } } = args;
+    const { owner, organization, name } = gitUrlParse(url);
 
     process.env['USE_LOCAL_GIT'] = 'true';
 
@@ -56,27 +61,32 @@ export async function initialize(args: InitializeRequest): Promise<boolean> {
 
     try {
         await clone(url, projectPath);
-    } catch(err) {
+    } catch (err) {
         logger.error(err.message);
     }
 
     let version;
-    const versionResult = await git(['rev-parse', 'HEAD'], projectPath, '');
-    if (versionResult.exitCode === 0) {
-        version = versionResult.stdout;
-        const dumpFilePath = path.join(dumpPath, `${version}.lsif`);
-        const tsconfigFiles = await findTsConfigFile(projectPath);
 
-        if(tsconfigFiles.length === 0) {
-            return false;
+    if (commit) {
+        version = commit;
+    } else {
+        const versionResult = await git(['rev-parse', 'HEAD'], projectPath, '');
+        if (versionResult.exitCode === 0) {
+            version = versionResult.stdout;
         }
-        console.log(tsconfigFiles);
-        const initialized = await initializeLSIFDump(dumpFilePath, projectPath, tsconfigFiles[0]);
-        if (initialized) {
-            await jsonDatabase.load(dumpFilePath);
-            return true;
-        }
+    }
+
+    const dumpFilePath = path.join(dumpPath, `${version}.lsif`);
+    const tsconfigFiles = await findTsConfigFile(projectPath);
+
+    if (tsconfigFiles.length === 0) {
         return false;
+    }
+
+    const initialized = await generateLSIFDumpFile(dumpFilePath, projectPath, tsconfigFiles[0]);
+    if (initialized) {
+        await jsonDatabase.load(dumpFilePath);
+        return true;
     }
     return false;
 }

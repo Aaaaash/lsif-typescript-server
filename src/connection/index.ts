@@ -45,7 +45,7 @@ export class Connection {
     ) { }
 
     public listen(): void {
-        logger.log('Connection initialize.');
+        logger.log('Connection success.');
         this.state = ConnectionState.Listening;
         this.messageReader.listen(this.messageCallback);
     }

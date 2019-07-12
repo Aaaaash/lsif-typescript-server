@@ -4,12 +4,12 @@ import gitUrlParse from 'git-url-parse';
 import * as fse from 'fs-extra';
 import { clone, git } from 'dugite-extra';
 
-import { ensureDirExist } from 'src/utils';
+import { ensureDirExist, findTsConfigFile } from 'src/utils';
 import { InitializeRequest } from 'src/connection/protocol';
 import { jsonDatabase } from 'src/dataBase';
 import logger from 'src/logger';
 
-function initializeLSIFDump(fsPath: string, projectPath: string): Promise<boolean> {
+function initializeLSIFDump(fsPath: string, projectPath: string, tsconfigPath: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
         const executorFile = path.resolve(
             process.cwd(),
@@ -20,10 +20,10 @@ function initializeLSIFDump(fsPath: string, projectPath: string): Promise<boolea
         );
         const lsifArgs = [
             '-p',
-            './tsconfig.json',
+            tsconfigPath,
             '--stdout'
         ];
-        logger.debug(`tsconfig file path: ${path.join(projectPath, 'tsconfig.json')}`);
+        logger.log(`tsconfig path ${tsconfigPath}`);
 
         const childProcess = cp.fork(executorFile, lsifArgs, { cwd: projectPath, silent: true });
         const writeStream = fse.createWriteStream(fsPath);
@@ -65,7 +65,13 @@ export async function initialize(args: InitializeRequest): Promise<boolean> {
     if (versionResult.exitCode === 0) {
         version = versionResult.stdout;
         const dumpFilePath = path.join(dumpPath, `${version}.lsif`);
-        const initialized = await initializeLSIFDump(dumpFilePath, projectPath);
+        const tsconfigFiles = await findTsConfigFile(projectPath);
+
+        if(tsconfigFiles.length === 0) {
+            return false;
+        }
+        console.log(tsconfigFiles);
+        const initialized = await initializeLSIFDump(dumpFilePath, projectPath, tsconfigFiles[0]);
         if (initialized) {
             await jsonDatabase.load(dumpFilePath);
             return true;

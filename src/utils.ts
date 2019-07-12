@@ -1,5 +1,7 @@
 import * as path from 'path';
+import glob from 'glob';
 import * as fse from 'fs-extra';
+import logger from './logger';
 
 export function ensureDirExist(paths: string[], absolutePath: string): void {
     let base = '';
@@ -9,4 +11,17 @@ export function ensureDirExist(paths: string[], absolutePath: string): void {
             fse.mkdirSync(path.join(absolutePath, base));
         }
     }
+}
+
+export function findTsConfigFile(directory: string): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+        glob('tsconfig*json', { cwd: directory }, (err: Error | null, matches: string[]) => {
+            if (err !== null) {
+                logger.error(`Can not find any tsconfig file in ${directory}`);
+                reject(`Can not find any tsconfig file in ${directory}`);
+            }
+
+            resolve(matches);
+        });
+    });
 }

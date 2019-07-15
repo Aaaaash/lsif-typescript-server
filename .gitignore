@@ -10,3 +10,5 @@ yarn-error.log
 out/
 .gitrepo/
 .dumps/
+
+.vscode/.tcli_local_path_config.ini

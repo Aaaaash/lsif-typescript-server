@@ -30,6 +30,7 @@ import * as readline from 'readline';
 
 import logger from './logger';
 import { FileSystem } from './fileSystem';
+import { textDocumentUriTransfromer } from './utils';
 
 interface Vertices {
     all: Map<Id, Vertex>;
@@ -423,7 +424,7 @@ class JsonDatabase {
     }
 
     public documentSymbols(uri: string): lsp.DocumentSymbol[] | undefined {
-        const document = this.indices.documents.get(this.toDatabase(uri));
+        const document = this.indices.documents.get(this.toDatabase(textDocumentUriTransfromer(uri, this.projectRoot.fsPath)));
         if (document === undefined) {
             return undefined;
         }

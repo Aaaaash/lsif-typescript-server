@@ -59,12 +59,10 @@ export async function initialize(args: InitializeRequest): Promise<{ initialized
     const projectPath = path.join(process.cwd(), '.gitrepo', owner || organization, name);
     const dumpPath = path.join(process.cwd(), '.dumps', owner || organization, name);
 
-    if (!fse.pathExistsSync(projectPath)) {
-        try {
-            await clone(url, projectPath);
-        } catch (err) {
-            logger.error(err.message);
-        }
+    try {
+        await clone(url, projectPath);
+    } catch (err) {
+        logger.error(err.message);
     }
 
     let version;

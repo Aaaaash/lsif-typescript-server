@@ -25,3 +25,8 @@ export function findTsConfigFile(directory: string): Promise<string[]> {
         });
     });
 }
+
+export function textDocumentUriTransfromer(uri: string, projectRoot: string): string {
+    logger.debug(`Transfromer textDocument ${uri} to ${path.join(projectRoot, uri)}`);
+    return path.join(projectRoot, uri);
+}

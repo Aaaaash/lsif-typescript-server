@@ -2,8 +2,11 @@
 
 [![Build Status](https://travis-ci.org/Aaaaash/lsif-typescript-server.svg?branch=master)](https://travis-ci.org/Aaaaash/lsif-typescript-server)
 
-## Features
+LSIF TypeScript Server for [LSIF TypeScript Chrome Extensions](https://github.com/Aaaaash/lsif-typescript-chrome-extension)
 
-### Navigate to document symbols
+### Features
 
-![](snapshot/navigate-to-symbol.png)
+- TextDocumentSymbols
+- FindReferences
+- GotoDefinition
+- Hover

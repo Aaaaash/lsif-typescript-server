@@ -68,7 +68,7 @@ export async function initialize(args: InitializeRequest): Promise<{ initialized
 
     let version;
 
-    if (commit) {
+    if (commit && commit !== 'HEAD' || commit !== 'master') {
         version = commit;
     } else {
         const versionResult = await git(['rev-parse', 'HEAD'], projectPath, '');
@@ -83,7 +83,7 @@ export async function initialize(args: InitializeRequest): Promise<{ initialized
     if (tsconfigFiles.length === 0) {
         return {
             initialized: false,
-            message: 'Can not found any TypeScript CompilerOptions file.',
+            message: 'Can not found any TypeScript Compiler Options file.',
         };
     }
 

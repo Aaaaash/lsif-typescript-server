@@ -554,7 +554,7 @@ class JsonDatabase {
     }
 
     public hover(uri: string, position: lsp.Position): lsp.Hover | undefined {
-        let range = this.findRangeFromPosition(this.toDatabase(uri), position);
+        let range = this.findRangeFromPosition(this.toDatabase(textDocumentUriTransfromer(uri, this.projectRoot.fsPath)), position);
         if (range === undefined) {
             return undefined;
         }

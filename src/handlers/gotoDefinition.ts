@@ -1,8 +1,9 @@
 import { jsonDatabase } from 'src/dataBase';
 import { GotoDefinitionRequest } from 'src/connection/protocol';
+import { lsp } from 'lsif-protocol';
 
-export function gotoDefinition(args: GotoDefinitionRequest): string {
+export function gotoDefinition(args: GotoDefinitionRequest): lsp.Location[] | undefined {
     const { arguments: { textDocument, position } } = args;
-    const defintion = jsonDatabase.gotoDefinition(textDocument.uri, position);
-    return JSON.stringify(defintion);
+    const definition = jsonDatabase.gotoDefinition(textDocument.uri, position);
+    return definition;
 }

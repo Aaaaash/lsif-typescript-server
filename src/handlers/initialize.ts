@@ -11,8 +11,9 @@ import logger from 'src/logger';
 
 function generateDumpFile(dumpFilePath: string, projectPath: string, tsconfigPath: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        if (fse.existsSync(dumpFilePath)) {
+        if (fse.pathExistsSync(dumpFilePath)) {
             resolve(true);
+            return;
         }
 
         const executorFile = path.resolve(

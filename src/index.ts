@@ -4,6 +4,7 @@ import { logger } from './logger';
 import { Connection, WebSocketMessageReader, WebSocketMessageWriter } from './connection';
 import { InitializeRequest, DocumentSymbolRequest, FindReferencesRequest, GotoDefinitionRequest, HoverRequest } from './connection/protocol';
 import { documentSymbol, initialize, findReferences, gotoDefinition, hover } from './handlers';
+import { lsp } from 'lsif-protocol';
 
 const wss = new ws.Server({
     port: 8088,
@@ -34,11 +35,11 @@ wss.on('connection', (websocket: ws) => {
 
     connection.onRequest<InitializeRequest, Promise<{ initialized: true } | { initialized: false; message: string }>>('initialize', initialize);
 
-    connection.onRequest<DocumentSymbolRequest, string>('documentSymbol', documentSymbol);
+    connection.onRequest<DocumentSymbolRequest, lsp.DocumentSymbol[] | undefined>('documentSymbol', documentSymbol);
 
-    connection.onRequest<FindReferencesRequest, string>('findReferences', findReferences);
+    connection.onRequest<FindReferencesRequest, lsp.Location[] | undefined>('findReferences', findReferences);
 
-    connection.onRequest<GotoDefinitionRequest, string>('gotoDefinition', gotoDefinition);
+    connection.onRequest<GotoDefinitionRequest, lsp.Location[] | undefined>('gotoDefinition', gotoDefinition);
 
-    connection.onRequest<HoverRequest, string>('hover', hover);
+    connection.onRequest<HoverRequest, lsp.Hover | undefined>('hover', hover);
 });

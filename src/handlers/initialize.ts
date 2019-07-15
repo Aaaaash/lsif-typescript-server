@@ -9,7 +9,7 @@ import { InitializeRequest } from 'src/connection/protocol';
 import { jsonDatabase } from 'src/dataBase';
 import logger from 'src/logger';
 
-function generateLSIFDumpFile(dumpFilePath: string, projectPath: string, tsconfigPath: string): Promise<boolean> {
+function generateDumpFile(dumpFilePath: string, projectPath: string, tsconfigPath: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
         if (fse.existsSync(dumpFilePath)) {
             resolve(true);
@@ -27,7 +27,7 @@ function generateLSIFDumpFile(dumpFilePath: string, projectPath: string, tsconfi
             tsconfigPath,
             '--stdout'
         ];
-        logger.log(`tsconfig path ${tsconfigPath}`);
+        logger.log(`TypeScript CompilerOptions fils path: ${tsconfigPath}`);
 
         const childProcess = cp.fork(executorFile, lsifArgs, { cwd: projectPath, silent: true });
         const writeStream = fse.createWriteStream(dumpFilePath);
@@ -47,7 +47,7 @@ function generateLSIFDumpFile(dumpFilePath: string, projectPath: string, tsconfi
     });
 }
 
-export async function initialize(args: InitializeRequest): Promise<boolean> {
+export async function initialize(args: InitializeRequest): Promise<{ initialized: true } | { initialized: false; message: string }> {
     const { arguments: { url, commit } } = args;
     const { owner, organization, name } = gitUrlParse(url);
 
@@ -59,10 +59,12 @@ export async function initialize(args: InitializeRequest): Promise<boolean> {
     const projectPath = path.join(process.cwd(), '.gitrepo', owner || organization, name);
     const dumpPath = path.join(process.cwd(), '.dumps', owner || organization, name);
 
-    try {
-        await clone(url, projectPath);
-    } catch (err) {
-        logger.error(err.message);
+    if (!fse.pathExistsSync(projectPath)) {
+        try {
+            await clone(url, projectPath);
+        } catch (err) {
+            logger.error(err.message);
+        }
     }
 
     let version;
@@ -80,13 +82,24 @@ export async function initialize(args: InitializeRequest): Promise<boolean> {
     const tsconfigFiles = await findTsConfigFile(projectPath);
 
     if (tsconfigFiles.length === 0) {
-        return false;
+        return {
+            initialized: false,
+            message: 'Can not found any TypeScript CompilerOptions file.',
+        };
     }
 
-    const initialized = await generateLSIFDumpFile(dumpFilePath, projectPath, tsconfigFiles[0]);
-    if (initialized) {
-        await jsonDatabase.load(dumpFilePath);
-        return true;
+    try {
+        const initialized = await generateDumpFile(dumpFilePath, projectPath, tsconfigFiles[0]);
+        if (initialized) {
+            await jsonDatabase.load(dumpFilePath);
+            return { initialized: true };
+        }
+    } catch(err) {
+        console.log(`initialize failed, reason: ${err.message}`);
+        return {
+            initialized: false,
+            message: err.message,
+        };
     }
-    return false;
+    return { initialized: true };
 }

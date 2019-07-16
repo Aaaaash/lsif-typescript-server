@@ -95,23 +95,31 @@ export class Connection {
         const requestHandler = this.requestHandlers.get(message.method!);
         if (requestHandler) {
             const result = requestHandler(message);
-            if (result.then) {
-                result.then((data: any) => {
-                    console.log(data);
+            if (result) {
+                if (result.then) {
+                    result.then((data: any) => {
+                        const responseMessage = {
+                            id: message.id,
+                            method: message.method!,
+                            result: data,
+                        };
+                        this.messageWriter.write(responseMessage);
+                    });
+                } else {
                     const responseMessage = {
+                        result,
                         id: message.id,
                         method: message.method!,
-                        result: data,
                     };
+
                     this.messageWriter.write(responseMessage);
-                });
+                }
             } else {
                 const responseMessage = {
-                    result,
+                    result: null,
                     id: message.id,
                     method: message.method!,
                 };
-
                 this.messageWriter.write(responseMessage);
             }
         }

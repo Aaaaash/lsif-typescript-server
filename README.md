@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/Aaaaash/lsif-typescript-server.svg?branch=master)](https://travis-ci.org/Aaaaash/lsif-typescript-server)
 
-LSIF TypeScript Server for [LSIF TypeScript Chrome Extensions](https://github.com/Aaaaash/lsif-typescript-chrome-extension)
+LSIF TypeScript Server for [LSIF TypeScript Chrome Extension](https://github.com/Aaaaash/lsif-typescript-chrome-extension)
 
 ### Features
 
@@ -10,3 +10,8 @@ LSIF TypeScript Server for [LSIF TypeScript Chrome Extensions](https://github.co
 - FindReferences
 - GotoDefinition
 - Hover
+
+### TODO
+
+- 优化 monorepo
+- 改进 initialize 流程

@@ -139,7 +139,11 @@ class JsonDatabase {
     protected initialize = (): void => {
         logger.debug('Initialize project.');
         const projectRoot = this.getProjectRoot().toString(true);
-        this.uriTransformer = noopTransformer;
+        logger.debug(projectRoot);
+        this.uriTransformer = {
+            toDatabase: (uri) => URI.file(uri).toString(),
+            fromDatabase: (uri) => uri.toString().replace(`${projectRoot}/`, ''),
+        };
         this.fileSystem = new FileSystem(projectRoot, this.getDocumentInfos());
     }
 
@@ -531,12 +535,13 @@ class JsonDatabase {
             return value;
         } else {
             let document = this.in.contains.get(value.id)!;
+            logger.debug((document as Document).uri);
             return lsp.Location.create(this.uriTransformer!.fromDatabase((document as Document).uri), this.asRange(value));
         }
     }
 
     public gotoDefinition(uri: string, position: lsp.Position): lsp.Location[] | undefined {
-        let range = this.findRangeFromPosition(this.toDatabase(uri), position);
+        let range = this.findRangeFromPosition(this.toDatabase(textDocumentUriTransfromer(uri, this.projectRoot.fsPath)), position);
         if (range === undefined) {
             return undefined;
         }

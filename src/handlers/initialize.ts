@@ -30,7 +30,14 @@ function generateDumpFile(dumpFilePath: string, projectPath: string, tsconfigPat
         ];
         logger.log(`TypeScript CompilerOptions fils path: ${tsconfigPath}`);
 
-        const childProcess = cp.fork(executorFile, lsifArgs, { cwd: projectPath, silent: true });
+        const options = {
+            cwd: projectPath,
+            silent: true,
+            execArgv: [
+                '--max-old-space-size=32384'
+            ],
+        };
+        const childProcess = cp.fork(executorFile, lsifArgs, options);
         const writeStream = fse.createWriteStream(dumpFilePath);
 
         if (childProcess.stdout) {

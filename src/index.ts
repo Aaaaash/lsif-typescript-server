@@ -43,3 +43,11 @@ wss.on('connection', (websocket: ws) => {
 
     connection.onRequest<HoverRequest, lsp.Hover | undefined>('hover', hover);
 });
+
+process.on('unhandledRejection', (reason) => {
+    logger.error(`Receive unhandled Rejection, ${reason}`);
+});
+
+process.on('uncaughtException', (err) => {
+    logger.error(`Receive uncaught Exception, ${err.message}`);
+});

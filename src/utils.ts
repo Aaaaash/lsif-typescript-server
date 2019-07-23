@@ -30,3 +30,7 @@ export function textDocumentUriTransfromer(uri: string, projectRoot: string): st
     logger.debug(`Transfromer textDocument ${uri} to ${path.join(projectRoot, uri)}`);
     return path.join(projectRoot, uri);
 }
+
+export function isMasterOrHead(version: string): boolean {
+    return version === 'master' || version === 'HEAD';
+}

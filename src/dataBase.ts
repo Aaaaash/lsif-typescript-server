@@ -137,6 +137,7 @@ class JsonDatabase {
     }
 
     protected initialize = (): void => {
+        logger.debug('Initialize project.');
         const projectRoot = this.getProjectRoot().toString(true);
         this.uriTransformer = noopTransformer;
         this.fileSystem = new FileSystem(projectRoot, this.getDocumentInfos());
@@ -326,6 +327,7 @@ class JsonDatabase {
 
             rdInterface.addListener('line', (chunk: string) => {
                 if (!chunk || chunk.length === 0) {
+                    logger.warn('Skip line.');
                     return;
                 }
 
@@ -364,7 +366,7 @@ class JsonDatabase {
                         return;
                     }
                 }
-
+                logger.debug('Load done.');
                 resolve();
             })
         })

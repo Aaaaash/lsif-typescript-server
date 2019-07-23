@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as cp from 'child_process';
 import gitUrlParse from 'git-url-parse';
 import * as fse from 'fs-extra';
-import { clone, git } from 'dugite-extra';
+import { clone, git, checkout, fetch } from 'dugite-extra';
 
 import { ensureDirExist, findTsConfigFile } from 'src/utils';
 import { InitializeRequest } from 'src/connection/protocol';
@@ -10,7 +10,7 @@ import { jsonDatabase } from 'src/dataBase';
 import logger from 'src/logger';
 
 function generateDumpFile(dumpFilePath: string, projectPath: string, tsconfigPath: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         if (fse.pathExistsSync(dumpFilePath)) {
             resolve(true);
             return;
@@ -75,19 +75,20 @@ export async function initialize(args: InitializeRequest): Promise<{ initialized
 
     let version;
 
-    if (commit && commit !== 'HEAD' || commit !== 'master') {
-        version = commit;
-    } else {
-        const versionResult = await git(['rev-parse', 'HEAD'], projectPath, '');
-        if (versionResult.exitCode === 0) {
-            version = versionResult.stdout;
-        }
+    await fetch(projectPath, 'origin');
+
+    await checkout(projectPath, [], commit);
+
+    const versionResult = await git(['rev-parse', 'HEAD'], projectPath, '');
+    if (versionResult.exitCode === 0) {
+        version = versionResult.stdout;
     }
 
     const dumpFilePath = path.join(dumpPath, `${version}.lsif`);
     const tsconfigFiles = await findTsConfigFile(projectPath);
 
     if (tsconfigFiles.length === 0) {
+        logger.warn('Initialize failed, Can not found any TypeScript Compiler Options file.');
         return {
             initialized: false,
             message: 'Can not found any TypeScript Compiler Options file.',
@@ -95,17 +96,18 @@ export async function initialize(args: InitializeRequest): Promise<{ initialized
     }
 
     try {
-        const initialized = await generateDumpFile(dumpFilePath, projectPath, tsconfigFiles[0]);
-        if (initialized) {
-            await jsonDatabase.load(dumpFilePath);
-            return { initialized: true };
-        }
+        await generateDumpFile(dumpFilePath, projectPath, tsconfigFiles[0]);
+        logger.debug('Dump file generate success.');
+
+        logger.debug('Load dump file via Json Database');
+        await jsonDatabase.load(dumpFilePath);
+        logger.debug('Load success.');
+        return { initialized: true };
     } catch(err) {
-        console.log(`initialize failed, reason: ${err.message}`);
+        logger.warn(`initialize failed, reason: ${err.message}`);
         return {
             initialized: false,
             message: err.message,
         };
     }
-    return { initialized: true };
 }

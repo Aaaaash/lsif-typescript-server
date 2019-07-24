@@ -33,7 +33,7 @@ wss.on('connection', (websocket: ws) => {
 
     connection.listen();
 
-    connection.onRequest<InitializeRequest, Promise<{ initialized: true } | { initialized: false; message: string }>>('initialize', initialize);
+    connection.onRequest<InitializeRequest, { initialized: true } | { initialized: false; message: string }>('initialize', initialize);
 
     connection.onRequest<DocumentSymbolRequest, lsp.DocumentSymbol[] | undefined>('documentSymbol', documentSymbol);
 

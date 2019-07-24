@@ -1,7 +1,9 @@
 import * as path from 'path';
 import glob from 'glob';
 import * as fse from 'fs-extra';
+
 import logger from './logger';
+import { DB_STORAGE_PATH } from './constants';
 
 export function ensureDirExist(paths: string[], absolutePath: string): void {
     let base = '';
@@ -26,11 +28,17 @@ export function findTsConfigFile(directory: string): Promise<string[]> {
     });
 }
 
-export function textDocumentUriTransfromer(uri: string, projectRoot: string): string {
-    logger.debug(`Transfromer textDocument ${uri} to ${path.join(projectRoot, uri)}`);
+export function textDocumentUriTransfromer(
+    uri: string,
+    projectRoot: string,
+): string {
     return path.join(projectRoot, uri);
 }
 
 export function isMasterOrHead(version: string): boolean {
     return version === 'master' || version === 'HEAD';
+}
+
+export function diskFile(repository: string, commit: string): string {
+    return path.join(DB_STORAGE_PATH, `${repository}@${commit}.lsif`);
 }

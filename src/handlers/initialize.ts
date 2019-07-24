@@ -6,10 +6,15 @@ import { clone, git, checkout, fetch } from 'dugite-extra';
 
 import { ensureDirExist, findTsConfigFile } from 'src/utils';
 import { InitializeRequest } from 'src/connection/protocol';
-import { jsonDatabase } from 'src/jsonDatabase';
+import { withDB } from 'src/dbCache';
 import logger from 'src/logger';
+import { DB_STORAGE_PATH } from 'src/constants';
 
-function generateDumpFile(dumpFilePath: string, projectPath: string, tsconfigPath: string): Promise<boolean> {
+function generateDumpFile(
+    dumpFilePath: string,
+    projectPath: string,
+    tsconfigPath: string,
+): Promise<boolean> {
     return new Promise(async (resolve, reject) => {
         if (fse.pathExistsSync(dumpFilePath)) {
             resolve(true);
@@ -55,8 +60,10 @@ function generateDumpFile(dumpFilePath: string, projectPath: string, tsconfigPat
     });
 }
 
-export async function initialize(args: InitializeRequest): Promise<{ initialized: true } | { initialized: false; message: string }> {
-    const { arguments: { url, commit } } = args;
+export async function initialize(
+    args: InitializeRequest
+): Promise<{ initialized: true } | { initialized: false; message: string }> {
+    const { arguments: { url, commit, repository } } = args;
     const { owner, organization, name } = gitUrlParse(url);
 
     process.env['USE_LOCAL_GIT'] = 'true';
@@ -65,7 +72,6 @@ export async function initialize(args: InitializeRequest): Promise<{ initialized
     ensureDirExist([owner || organization, name], path.resolve(process.cwd(), '.dumps'));
 
     const projectPath = path.join(process.cwd(), '.gitrepo', owner || organization, name);
-    const dumpPath = path.join(process.cwd(), '.dumps', owner || organization, name);
 
     try {
         await clone(url, projectPath);
@@ -80,11 +86,9 @@ export async function initialize(args: InitializeRequest): Promise<{ initialized
     await checkout(projectPath, [], commit);
 
     const versionResult = await git(['rev-parse', 'HEAD'], projectPath, '');
-    if (versionResult.exitCode === 0) {
-        version = versionResult.stdout;
-    }
+    version = versionResult.stdout.trim();
 
-    const dumpFilePath = path.join(dumpPath, `${version}.lsif`);
+    const dumpFilePath = path.join(DB_STORAGE_PATH, `${repository}@${version}.lsif`);
     const tsconfigFiles = await findTsConfigFile(projectPath);
 
     if (tsconfigFiles.length === 0) {
@@ -99,9 +103,9 @@ export async function initialize(args: InitializeRequest): Promise<{ initialized
         await generateDumpFile(dumpFilePath, projectPath, tsconfigFiles[0]);
         logger.debug('Dump file generate success.');
 
-        logger.debug('Load dump file via Json Database');
-        await jsonDatabase.load(dumpFilePath);
-        logger.debug('Load success.');
+        logger.debug('Cache database.');
+        await withDB(repository, version);
+
         return { initialized: true };
     } catch(err) {
         logger.warn(`initialize failed, reason: ${err.message}`);

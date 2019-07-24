@@ -1,9 +1,12 @@
-import { jsonDatabase } from 'src/jsonDatabase';
 import { GotoDefinitionRequest } from 'src/connection/protocol';
 import { lsp } from 'lsif-protocol';
+import { withDB } from 'src/dbCache';
 
-export function gotoDefinition(args: GotoDefinitionRequest): lsp.Location[] | undefined {
-    const { arguments: { textDocument, position } } = args;
-    const definition = jsonDatabase.gotoDefinition(textDocument.uri, position);
+export async function gotoDefinition(
+    args: GotoDefinitionRequest,
+): Promise<lsp.Location[] | undefined> {
+    const { arguments: { textDocument, position, repository, commit } } = args;
+    const database = await withDB(repository, commit);
+    const definition = database.gotoDefinition(textDocument.uri, position);
     return definition;
 }

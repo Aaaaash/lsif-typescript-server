@@ -10,9 +10,7 @@ export enum Request {
     INITIALIZE = 'initialize',
 }
 
-export enum Notification {
-
-}
+export enum Notification {}
 
 export interface Message<T> {
     type: Event;
@@ -23,7 +21,7 @@ export interface Message<T> {
 }
 
 export interface InitializeArguments {
-    projectName: string;
+    repository: string;
     url: string;
     commit: string;
 };
@@ -34,11 +32,15 @@ interface TextDocumentInentifier {
 
 export interface DocumentSymbolArguments {
     textDocument: TextDocumentInentifier;
+    commit: string;
+    repository: string;
 }
 
 export interface TextDocumentPositionArguments {
     textDocument: TextDocumentInentifier;
     position: lsp.Position;
+    commit: string;
+    repository: string;
 }
 
 export type InitializeRequest = Message<InitializeArguments>;

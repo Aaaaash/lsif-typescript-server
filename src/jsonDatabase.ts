@@ -85,7 +85,7 @@ export interface DocumentInfo {
     uri: string;
 }
 
-class JsonDatabase {
+export class JsonDatabase {
 
     private version: string | undefined;
 
@@ -577,6 +577,8 @@ class JsonDatabase {
             range: hoverRange
         };
     }
-}
 
-export const jsonDatabase = new JsonDatabase();
+    public close(): void {
+        logger.debug('Close JsonDatabasse');
+    }
+}

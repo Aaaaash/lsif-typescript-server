@@ -1,11 +1,12 @@
-import { jsonDatabase } from 'src/jsonDatabase';
 import { DocumentSymbolRequest } from 'src/connection/protocol';
-import logger from 'src/logger';
 import { lsp } from 'lsif-protocol';
+import { withDB } from 'src/dbCache';
 
-export function documentSymbol(args: DocumentSymbolRequest): lsp.DocumentSymbol[] | undefined {
-    const { arguments: { textDocument } } = args;
-    logger.log(textDocument.uri);
-    const documentSymbol = jsonDatabase.documentSymbols(textDocument.uri);
+export async function documentSymbol(
+    args: DocumentSymbolRequest,
+): Promise<lsp.DocumentSymbol[] | undefined> {
+    const { arguments: { textDocument, repository, commit } } = args;
+    const database = await withDB(repository, commit);
+    const documentSymbol = database.documentSymbols(textDocument.uri);
     return documentSymbol;
 }

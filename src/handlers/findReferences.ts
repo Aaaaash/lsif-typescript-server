@@ -1,12 +1,15 @@
 import { FindReferencesRequest } from 'src/connection/protocol';
-import { jsonDatabase } from 'src/jsonDatabase';
 import { lsp } from 'lsif-protocol';
+import { withDB } from 'src/dbCache';
 
-export function findReferences(args: FindReferencesRequest): lsp.Location[] | undefined {
-    const { arguments: { textDocument, position } } = args;
+export async function findReferences(
+    args: FindReferencesRequest,
+): Promise<lsp.Location[] | undefined> {
+    const { arguments: { textDocument, position, repository, commit } } = args;
     const context = {
         includeDeclaration: true,
     };
-    const references = jsonDatabase.references(textDocument.uri, position, context);
+    const database = await withDB(repository, commit);
+    const references = database.references(textDocument.uri, position, context);
     return references;
 }

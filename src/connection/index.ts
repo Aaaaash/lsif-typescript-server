@@ -133,7 +133,7 @@ export class Connection {
 
     }
 
-    public onRequest<T, R>(method: string, handler: (args: T) => R): void {
+    public onRequest<T, R>(method: string, handler: (args: T) => Promise<R>): void {
         this.requestHandlers.set(method, handler);
     }
 

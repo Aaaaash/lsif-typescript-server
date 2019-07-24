@@ -1,5 +1,5 @@
 import { FindReferencesRequest } from 'src/connection/protocol';
-import { jsonDatabase } from 'src/dataBase';
+import { jsonDatabase } from 'src/jsonDatabase';
 import { lsp } from 'lsif-protocol';
 
 export function findReferences(args: FindReferencesRequest): lsp.Location[] | undefined {

@@ -6,7 +6,7 @@ import { clone, git, checkout, fetch } from 'dugite-extra';
 
 import { ensureDirExist, findTsConfigFile } from 'src/utils';
 import { InitializeRequest } from 'src/connection/protocol';
-import { jsonDatabase } from 'src/dataBase';
+import { jsonDatabase } from 'src/jsonDatabase';
 import logger from 'src/logger';
 
 function generateDumpFile(dumpFilePath: string, projectPath: string, tsconfigPath: string): Promise<boolean> {

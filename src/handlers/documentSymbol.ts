@@ -1,4 +1,4 @@
-import { jsonDatabase } from 'src/dataBase';
+import { jsonDatabase } from 'src/jsonDatabase';
 import { DocumentSymbolRequest } from 'src/connection/protocol';
 import logger from 'src/logger';
 import { lsp } from 'lsif-protocol';

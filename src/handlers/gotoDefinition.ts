@@ -1,4 +1,4 @@
-import { jsonDatabase } from 'src/dataBase';
+import { jsonDatabase } from 'src/jsonDatabase';
 import { GotoDefinitionRequest } from 'src/connection/protocol';
 import { lsp } from 'lsif-protocol';
 

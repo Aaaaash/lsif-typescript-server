@@ -62,7 +62,7 @@ function generateDumpFile(
 
 export async function initialize(
     args: InitializeRequest
-): Promise<{ initialized: true } | { initialized: false; message: string }> {
+): Promise<{ initialized: true; commit: string } | { initialized: false; message: string }> {
     const { arguments: { url, commit, repository } } = args;
     const { owner, organization, name } = gitUrlParse(url);
 
@@ -106,7 +106,7 @@ export async function initialize(
         logger.debug('Cache database.');
         await withDB(repository, version);
 
-        return { initialized: true };
+        return { initialized: true, commit: version };
     } catch(err) {
         logger.warn(`initialize failed, reason: ${err.message}`);
         return {

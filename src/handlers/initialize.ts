@@ -69,7 +69,6 @@ export async function initialize(
     process.env['USE_LOCAL_GIT'] = 'true';
 
     ensureDirExist([owner || organization, name], path.resolve(process.cwd(), '.gitrepo'));
-    ensureDirExist([owner || organization, name], path.resolve(process.cwd(), '.dumps'));
 
     const projectPath = path.join(process.cwd(), '.gitrepo', owner || organization, name);
 

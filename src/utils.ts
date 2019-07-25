@@ -42,3 +42,17 @@ export function isMasterOrHead(version: string): boolean {
 export function diskFile(repository: string, commit: string): string {
     return path.join(DB_STORAGE_PATH, `${repository}@${commit}.lsif`);
 }
+
+export function checkCommit(commit: any): void {
+    if (typeof commit !== 'string' || commit.length !== 40 || !/^[0-9a-f]+$/.test(commit)) {
+        throw Object.assign(new Error('Must specify the commit as a 40 character hash ' + commit), { status: 400 });
+    }
+}
+
+export function checkRepository(repository: any): void {
+    if (typeof repository !== 'string') {
+        throw Object.assign(new Error('Must specify the repository (usually of the form github.com/user/repo)'), {
+            status: 400,
+        });
+    }
+}

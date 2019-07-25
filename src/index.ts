@@ -1,13 +1,43 @@
+import * as path from 'path';
+import * as fse from 'fs-extra';
 import ws from 'ws';
+import express from 'express';
+import { lsp } from 'lsif-protocol';
 
 import { logger } from './logger';
 import { Connection, WebSocketMessageReader, WebSocketMessageWriter } from './connection';
 import { InitializeRequest, DocumentSymbolRequest, FindReferencesRequest, GotoDefinitionRequest, HoverRequest } from './connection/protocol';
 import { documentSymbol, initialize, findReferences, gotoDefinition, hover } from './handlers';
-import { lsp } from 'lsif-protocol';
+import { checkCommit, checkRepository } from './utils';
+import { DB_STORAGE_PATH } from './constants';
+
+const app = express();
+
+const server = app.listen(8088, () => {
+    logger.log('Start server in 8088 port.');
+});
+
+app.post('/upload', (req, res) => {
+    const { commit, repository } = req.query;
+
+    checkCommit(commit);
+    checkRepository(repository);
+
+    const dumpFilePath = path.join(DB_STORAGE_PATH, `${repository}@${commit}.lsif`);
+    const dumpFileWriteStream = fse.createWriteStream(dumpFilePath);
+
+    req.pipe(dumpFileWriteStream);
+
+    dumpFileWriteStream.on('close', () => {
+        res.send('Upload successful.');
+    });
+    dumpFileWriteStream.on('error', (err) => {
+        res.send(`Upload error, ${err.message}`);
+    });
+});
 
 const wss = new ws.Server({
-    port: 8088,
+    server,
     perMessageDeflate: {
         zlibDeflateOptions: {
             chunkSize: 1024,
@@ -20,10 +50,6 @@ const wss = new ws.Server({
         concurrencyLimit: 10,
         threshold: 1024,
     }
-});
-
-wss.addListener('listening', () => {
-    logger.log('Start websocket server in 8088.');
 });
 
 wss.on('connection', (websocket: ws) => {

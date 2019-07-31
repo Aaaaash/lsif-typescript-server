@@ -68,6 +68,10 @@ wss.on('connection', (websocket: ws) => {
     connection.onRequest<GotoDefinitionRequest, lsp.Location[] | undefined>('gotoDefinition', gotoDefinition);
 
     connection.onRequest<HoverRequest, lsp.Hover | undefined>('hover', hover);
+
+    connection.onNotification('cancelRequest', (args) => {
+        console.log(args);
+    });
 });
 
 process.on('unhandledRejection', (reason) => {

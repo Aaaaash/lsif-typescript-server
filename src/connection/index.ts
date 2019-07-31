@@ -18,7 +18,6 @@ interface ResponsePromise {
     reject: (error: any) => void;
 }
 
-
 export type HandlerResult<R> = R | Promise<R>;
 
 export interface GenericRequestHandler<R> {
@@ -130,14 +129,14 @@ export class Connection {
     }
 
     private handleNotification(message: Message<any>): void {
-
+        console.log(message);
     }
 
     public onRequest<T, R>(method: string, handler: (args: T) => Promise<R>): void {
         this.requestHandlers.set(method, handler);
     }
 
-    public onNotification<T, R>(notifyType: string, handler: (args: R) => void): void {
+    public onNotification<T, R>(notifyType: string, handler: (args: T) => Promise<R>): void {
         this.notificationHandlers.set(notifyType, handler);
     }
 

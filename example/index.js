@@ -26,7 +26,7 @@ websocket.onopen = () => {
                         id: 1,
                         arguments: {
                             textDocument: {
-                                uri: '/Users/baoxubing/Documents/work/lsif-project/lsif-typescript-server/.gitrepo/theia-ide/dugite-extra/src/model/commit-identity.ts'
+                                uri: '~/Documents/work/lsif-project/lsif-typescript-server/.gitrepo/theia-ide/dugite-extra/src/model/commit-identity.ts'
                             }
                         }
                     });
@@ -40,7 +40,7 @@ websocket.onopen = () => {
                             id: 2,
                             arguments: {
                                 textDocument: {
-                                    uri: '/Users/baoxubing/Documents/work/lsif-project/lsif-typescript-server/.gitrepo/theia-ide/dugite-extra/src/model/branch.ts',
+                                    uri: '~/Documents/work/lsif-project/lsif-typescript-server/.gitrepo/theia-ide/dugite-extra/src/model/branch.ts',
                                 },
                                 position: {
                                     line: 59,

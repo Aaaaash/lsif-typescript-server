@@ -25,10 +25,8 @@ export interface FileStat {
     size: number;
 }
 
-export namespace FileStat {
-    export function createFile(): FileStat {
-        return { type: FileType.File, ctime: ctime, mtime: mtime, size: 0 };
-    }
+export function createFileStat(): FileStat {
+    return { type: FileType.File, ctime: ctime, mtime: mtime, size: 0 };
 }
 
 export interface DocumentInfo {
@@ -42,10 +40,8 @@ interface File extends FileStat {
     id: Id;
 }
 
-namespace File {
-    export function create(name: string, id: Id): File {
-        return { type: FileType.File, ctime: ctime, mtime: mtime, size: 0, name, id };
-    }
+export function createFile(name: string, id: Id): File {
+    return { type: FileType.File, ctime: ctime, mtime: mtime, size: 0, name, id };
 }
 
 interface Directory extends FileStat {
@@ -54,10 +50,8 @@ interface Directory extends FileStat {
     children: Map<string, Entry>;
 }
 
-namespace Directory {
-    export function create(name: string): Directory {
-        return { type: FileType.Directory, ctime: Date.now(), mtime: Date.now(), size: 0, name, children: new Map() }
-    }
+export function createDirectory(name: string): Directory {
+    return { type: FileType.Directory, ctime: Date.now(), mtime: Date.now(), size: 0, name, children: new Map() }
 }
 
 export type Entry = File | Directory;
@@ -77,7 +71,7 @@ export class FileSystem {
             this.projectRoot = projectRoot;
             this.projectRootWithSlash = projectRoot + '/';
         }
-        this.root = Directory.create('');
+        this.root = createDirectory('');
         this.outside = new Map();
         for (let info of documents) {
             // Do not show file outside the projectRoot.
@@ -90,7 +84,7 @@ export class FileSystem {
             let basename = path.posix.basename(p);
             let entry = this.lookup(dirname, true);
             if (entry && entry.type === FileType.Directory) {
-                entry.children.set(basename, File.create(basename, info.id));
+                entry.children.set(basename, createFile(basename, info.id));
             }
         }
     }
@@ -146,7 +140,7 @@ export class FileSystem {
             if (entry.type === FileType.Directory) {
                 child = entry.children.get(part);
                 if (child === undefined && create) {
-                    child = Directory.create(part);
+                    child = createDirectory(part);
                     entry.children.set(part, child);
                 }
             }

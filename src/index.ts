@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fse from 'fs-extra';
 import ws from 'ws';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { lsp } from 'lsif-protocol';
 
 import { logger } from './logger';
@@ -17,7 +17,7 @@ const server = app.listen(8088, () => {
     logger.log('Start server in 8088 port.');
 });
 
-app.post('/upload', (req, res) => {
+app.post('/upload', (req: Request, res: Response) => {
     const { commit, repository } = req.query;
 
     checkCommit(commit);

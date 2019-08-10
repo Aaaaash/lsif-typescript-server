@@ -24,6 +24,7 @@
     "lru-cache": "^5.1.1",
     "lsif-protocol": "^0.4.2",
     "lsif-tsc": "^0.4.6",
+    "node-ssh": "^6.0.0",
     "semver": "^6.2.0",
     "sqlite3": "^4.0.8",
     "vscode-languageserver": "^5.2.1",
@@ -33,15 +34,21 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "1.11.0",
     "@typescript-eslint/parser": "1.11.0",
+    "dotenv": "^8.0.0",
     "eslint": "6.0.1",
     "eslint-plugin-typescript": "0.14.0",
+    "ts-loader": "^6.0.4",
     "ts-node": "^8.3.0",
     "tsconfig-paths": "^3.8.0",
     "typescript": "^3.4.5",
-    "typescript-eslint-parser": "22.0.0"
+    "typescript-eslint-parser": "22.0.0",
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.5",
+    "webpackbar": "^4.0.0"
   },
   "scripts": {
     "start": "node --experimental-worker --require ts-node/register --require tsconfig-paths/register src/index.ts",
+    "build": "rm -rf out && NODE_ENV=production webpack --config ./webpack.config.js --mode=production --progress",
     "compile": "tsc -p .",
     "lint": "./node_modules/.bin/eslint --ext .ts ./ --ignore-pattern ./.eslintignore",
     "lint:fix": "./node_modules/.bin/eslint --ext .ts ./ --ignore-pattern ./.eslintignore --fix"

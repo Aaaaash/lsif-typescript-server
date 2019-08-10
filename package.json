@@ -48,7 +48,8 @@
   },
   "scripts": {
     "start": "node --experimental-worker --require ts-node/register --require tsconfig-paths/register src/index.ts",
-    "build": "rm -rf out && NODE_ENV=production webpack --config ./webpack.config.js --mode=production --progress",
+    "build": "npm run lint && rm -rf out && NODE_ENV=production webpack --config ./webpack.config.js --mode=production --progress",
+    "postbuild": "node copyDependencies.js",
     "compile": "tsc -p .",
     "lint": "./node_modules/.bin/eslint --ext .ts ./ --ignore-pattern ./.eslintignore",
     "lint:fix": "./node_modules/.bin/eslint --ext .ts ./ --ignore-pattern ./.eslintignore --fix"

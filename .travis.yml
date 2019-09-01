@@ -11,6 +11,7 @@ node_js:
 
 install:
   - yarn install
+  - yarn audit fix
 
 script:
   - yarn run lint

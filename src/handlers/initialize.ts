@@ -3,7 +3,6 @@ import * as cp from 'child_process';
 import gitUrlParse from 'git-url-parse';
 import * as fse from 'fs-extra';
 import { clone, git, checkout, fetch } from 'dugite-extra';
-import { Worker, workerData } from 'worker_threads';
 
 import { ensureDirExist, findTsConfigFile } from 'src/utils';
 import { InitializeRequest } from 'src/connection/protocol';

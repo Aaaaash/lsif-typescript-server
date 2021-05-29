@@ -29,7 +29,7 @@
     "sqlite3": "^4.0.8",
     "vscode-languageserver": "^5.2.1",
     "vscode-uri": "^2.0.3",
-    "ws": "^7.0.0"
+    "ws": "^7.4.6"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "1.11.0",

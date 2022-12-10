@@ -17,7 +17,7 @@
     "chalk": "^2.4.2",
     "dugite-extra": "^0.1.11",
     "dugite-no-gpl": "^1.69.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "fs-extra": "^8.1.0",
     "git-url-parse": "^11.1.2",
     "glob": "^7.1.4",
